@@ -17,7 +17,11 @@ var ifCmd = &cobra.Command{
 	Long: `A utility command that allows you to
 list all available network interfaces
 that can be used for the operations with
-this CLI.`,
+this CLI.
+
+By default the command will list only
+interfaces which are up, have a MAC
+and an IP address.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Get all network interfaces.
 		interfaces, err := net.Interfaces()
