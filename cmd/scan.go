@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -20,9 +21,11 @@ If your scan doesn't return any devices
 depite them being present on your network
 please increase the timeout and try again.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		devices, err := nsdp.Scan(interfaceName,
-			nsdp.Timeout(timeout),
-		)
+		// Create context to handle timeout.
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		devices, err := nsdp.Scan(interfaceName, nsdp.WithContext(ctx))
 		if err != nil {
 			return err
 		}

@@ -1,6 +1,7 @@
 package nsdp
 
 import (
+	"context"
 	"encoding/binary"
 	"io"
 	"net"
@@ -40,8 +41,19 @@ const (
 // Options defines the configureation of an
 // operations of this libary.
 type Options struct {
+	Context context.Context
 	Timeout time.Duration
 	Address net.Addr
+}
+
+// Apply applies the option functions to the current set of options.
+func (o *Options) Apply(options ...Option) (*Options, error) {
+	for _, option := range options {
+		if err := option(o); err != nil {
+			return nil, err
+		}
+	}
+	return o, nil
 }
 
 // Option defines the function signature to set
@@ -50,16 +62,20 @@ type Option func(*Options) error
 
 // GetDefaultOptions returns the default options
 // for all operations of this library.
-func GetDefaultOptions() Options {
-	return Options{
+func GetDefaultOptions() *Options {
+	return &Options{
 		Timeout: time.Second,
+		Context: context.Background(),
 	}
 }
 
-// Timeout overwrites the timeout for an operation.
-func Timeout(timeout time.Duration) Option {
+// WithContext supplies a custom context the
+// operations of this library. This makes it
+// possible to cancel the operations of this
+// library by using a timeout for example.
+func WithContext(ctx context.Context) Option {
 	return func(o *Options) error {
-		o.Timeout = timeout
+		o.Context = ctx
 		return nil
 	}
 }
