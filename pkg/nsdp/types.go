@@ -17,14 +17,21 @@ const (
 type RecordType uint16
 
 const (
-	RecordModel RecordType = iota + 1
-	_
+	RecordModel  RecordType = iota + 1
+	Record0x0002            // Is this the serial number?
 	RecordName
 	RecordMAC
-	_
+	Record0x0005
 	RecordIP
 	RecordNetmask
 	RecordGateway
+	Record0x0009
+	Record0x000A
+	Record0x000B
+	Record0x000C
+	Record0x000D
+	Record0x000E
+	Record0x000F
 )
 
 // OpCode describes the operation
