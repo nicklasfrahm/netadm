@@ -28,6 +28,9 @@ func Scan(ifaceName string, options ...Option) ([]Device, error) {
 		Port: ClientPort,
 	}
 	socket, err := net.ListenUDP("udp", &socketAddr)
+	if err != nil {
+		return nil, err
+	}
 	defer socket.Close()
 
 	fmt.Println(socketAddr.String())
