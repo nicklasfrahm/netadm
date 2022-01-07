@@ -31,12 +31,12 @@ please increase the timeout and try again.`,
 		}
 
 		// Check if any devices were found.
-		if len(*devices) == 0 {
+		if len(devices) == 0 {
 			return errors.New("no switches found")
 		}
 
 		// Print simple list of switches.
-		for _, device := range *devices {
+		for _, device := range devices {
 			fmt.Println(device.Name)
 		}
 

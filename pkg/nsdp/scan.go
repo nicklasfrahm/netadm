@@ -8,67 +8,85 @@ import (
 	"time"
 )
 
-func Scan(ifaceName string, options ...Option) (*[]Device, error) {
+// Scan performs a discovery for devices on the network by sending
+// an NSDP message to the broadcast address.
+func Scan(ifaceName string, options ...Option) ([]Device, error) {
 	opts, err := GetDefaultOptions().Apply(options...)
 	if err != nil {
 		return nil, err
 	}
 
-	iface, err := net.InterfaceByName(ifaceName)
-	if err != nil {
-		return nil, errors.New("unknown interface")
-	}
-
-	addresses, err := iface.Addrs()
+	// Check if the provided interface has a valid configuration.
+	iface, ip, err := GetValidInterface(ifaceName)
 	if err != nil {
 		return nil, err
 	}
-	if len(addresses) == 0 {
-		return nil, errors.New("interface has no address")
-	}
 
-	// Select IPv4 interface address.
-	var ip net.IP
-	for _, address := range addresses {
-		// Check if address is IPv4.
-		ipNet, ok := address.(*net.IPNet)
-		if ok && ipNet.IP.To4() != nil {
-			opts.Address = address
-			ip = ipNet.IP
-			break
-		}
-	}
-
-	// Check if interface has a valid IPv4 address.
-	if opts.Address == nil {
-		return nil, errors.New("interface has no valid IPv4 address")
-	}
-
-	clientAddr := net.UDPAddr{
-		IP:   ip,
+	// Create a UDP socket to listen for incoming packets.
+	socketAddr := net.UDPAddr{
+		IP:   *ip,
 		Port: ClientPort,
 	}
-	serverAddr := net.UDPAddr{
+	socket, err := net.ListenUDP("udp", &socketAddr)
+	defer socket.Close()
+
+	fmt.Println(socketAddr.String())
+
+	devices := make([]Device, 0)
+	responses := make([][]byte, 0)
+	errs := make(chan error, 1)
+
+	// Create a goroutine to listen for incoming packets.
+	go func() {
+		for {
+			select {
+			case <-opts.Context.Done():
+				return
+			default:
+				buf := make([]byte, 1500)
+
+				n, addr, err := socket.ReadFromUDP(buf)
+				if err != nil {
+					errs <- err
+					return
+				}
+
+				responses = append(responses, buf[:n])
+
+				// TODO: Remove this when we have a proper response parser.
+				fmt.Printf("%s - %dB\n", addr.String(), n)
+			}
+		}
+	}()
+
+	// Create discovery message and buffer it to
+	// ensure it is sent in a single datagram.
+	msg := NewDiscoveryMessage(iface)
+	buf := bytes.NewBuffer([]byte{})
+	if err := msg.Write(buf); err != nil {
+		return nil, err
+	}
+
+	// Send the message to the broadcast address.
+	deviceAddr := net.UDPAddr{
 		IP:   net.IPv4bcast,
 		Port: ServerPort,
 	}
-	conn, err := net.DialUDP("udp", &clientAddr, &serverAddr)
-	if err != nil {
+	if _, err := socket.WriteToUDP(buf.Bytes(), &deviceAddr); err != nil {
 		return nil, err
 	}
-	deadline, hasDeadline := opts.Context.Deadline()
-	if hasDeadline {
-		conn.SetDeadline(deadline)
-		conn.SetReadDeadline(deadline)
+
+	select {
+	case <-opts.Context.Done():
+		return devices, nil
+	case err := <-errs:
+		return nil, err
 	}
+}
 
-	// Close connection on context cancel.
-	// go func() {
-	// 	<-opts.Context.Done()
-	// 	conn.Close()
-	// 	return
-	// }()
-
+// NewDiscoveryMessage creates a new message that can be
+// broadcasted to discover other devices on the network.
+func NewDiscoveryMessage(iface *net.Interface) *Message {
 	// Fetch MAC address from client interface.
 	clientMAC := [6]uint8{}
 	for i := 0; i < len(clientMAC); i++ {
@@ -103,37 +121,49 @@ func Scan(ifaceName string, options ...Option) (*[]Device, error) {
 	}
 	msg.Records = append(msg.Records, scanRecords...)
 
-	// Buffer message to ensure it is sent in a single datagram.
-	buf := bytes.NewBuffer([]byte{})
-	if err := msg.Write(buf); err != nil {
-		return nil, err
-	}
+	return msg
+}
 
-	// TODO: Open seperate UDP listener as traffic
-	// is not related to broadcast address.
-
-	// DEBUG: Split the string into chunks of 4 characters.
-	hex := fmt.Sprintf("%X", buf)
-	for i := 0; i < len(hex); i += 4 {
-		fmt.Printf("%s ", []byte(hex[i:i+4]))
-	}
-
-	fmt.Printf("\t%d\n", buf.Len())
-
-	// Write buffered message to connection.
-	res := make([]byte, 1500)
-	n, err := conn.Write(buf.Bytes())
+// GetValidInterface fetches the interface based on the provided
+// interface name if it is up and has an IPv4 address.
+func GetValidInterface(ifaceName string) (*net.Interface, *net.IP, error) {
+	// Fetch specified interface by name.
+	iface, err := net.InterfaceByName(ifaceName)
 	if err != nil {
-		return nil, err
+		return nil, nil, errors.New("interface unknown")
 	}
-	fmt.Printf("Wrote %d bytes\n", n)
-	// devices := make([]Device, 0)
-	_, _, err = conn.ReadFromUDP(res)
+
+	// Check if interface is up.
+	if iface.Flags&net.FlagUp == 0 {
+		return nil, nil, errors.New("interface is down")
+	}
+
+	// Check if interface has addresses.
+	addresses, err := iface.Addrs()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
+	}
+	if len(addresses) == 0 {
+		return nil, nil, errors.New("interface has no address")
 	}
 
-	fmt.Printf("%X\n", res)
+	// Select IPv4 interface address.
+	var ip *net.IP
+	var address net.Addr
+	for _, addr := range addresses {
+		// Check if address is IPv4.
+		ipNet, ok := addr.(*net.IPNet)
+		if ok && ipNet.IP.To4() != nil {
+			ip = &ipNet.IP
+			address = addr
+			break
+		}
+	}
 
-	return nil, nil
+	// Check if interface has a valid IPv4 address.
+	if address == nil {
+		return nil, nil, errors.New("interface has no valid IPv4 address")
+	}
+
+	return iface, ip, nil
 }

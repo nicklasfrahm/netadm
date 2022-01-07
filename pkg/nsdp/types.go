@@ -43,7 +43,6 @@ const (
 type Options struct {
 	Context context.Context
 	Timeout time.Duration
-	Address net.Addr
 }
 
 // Apply applies the option functions to the current set of options.
