@@ -39,7 +39,7 @@ const (
 )
 
 // Options defines the configureation of an
-// operations of this libary.
+// operations of this library.
 type Options struct {
 	Context context.Context
 	Timeout time.Duration
