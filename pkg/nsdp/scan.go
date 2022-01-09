@@ -32,10 +32,7 @@ func Scan(ifaceName string, options ...Option) ([]Device, error) {
 	}
 	defer socket.Close()
 
-	fmt.Println(socketAddr.String())
-
 	devices := make([]Device, 0)
-	responses := make([][]byte, 0)
 	errs := make(chan error, 1)
 
 	// Create a goroutine to listen for incoming packets.
@@ -47,15 +44,11 @@ func Scan(ifaceName string, options ...Option) ([]Device, error) {
 			default:
 				buf := make([]byte, 1500)
 
-				n, addr, err := socket.ReadFromUDP(buf)
+				n, err := socket.Read(buf)
 				if err != nil {
 					errs <- err
 					return
 				}
-
-				// TODO: Remove this when we have a proper response parser.
-				fmt.Printf("%s - %dB\n", addr.String(), n)
-				responses = append(responses, buf[:n])
 
 				msg := new(Message)
 				if err := msg.UnmarshalBinary(buf[:n]); err != nil {
@@ -63,8 +56,12 @@ func Scan(ifaceName string, options ...Option) ([]Device, error) {
 					continue
 				}
 
-				// TODO: Remove this when we have a proper response parser.
-				fmt.Printf("%v\n", *msg)
+				device := new(Device)
+				if err := device.UnmarshalMessage(msg); err != nil {
+					errs <- err
+					return
+				}
+				devices = append(devices, *device)
 			}
 		}
 	}()
@@ -121,6 +118,8 @@ func NewDiscoveryMessage(iface *net.Interface) *Message {
 	msg.Header.Sequence = uint16(time.Now().UnixNano()/1e6) % 0xFFFF
 
 	// Define the information we would like to receive during discovery.
+	// The records specified here are the same ones used by the original
+	// tool provided by the manufacturer.
 	scanRecords := []Record{
 		{Type: RecordModel},
 		{Type: Record0x0002},
@@ -130,9 +129,9 @@ func NewDiscoveryMessage(iface *net.Interface) *Message {
 		{Type: RecordIP},
 		{Type: RecordNetmask},
 		{Type: RecordGateway},
-		{Type: Record0x000B},
+		{Type: RecordDHCP},
 		{Type: Record0x000C},
-		{Type: Record0x000D},
+		{Type: RecordFirmware},
 		{Type: Record0x000E},
 		{Type: Record0x000F},
 	}

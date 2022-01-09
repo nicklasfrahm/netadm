@@ -2,7 +2,6 @@ package nsdp
 
 import (
 	"context"
-	"net"
 	"time"
 )
 
@@ -49,16 +48,4 @@ func WithContext(ctx context.Context) Option {
 		o.Context = ctx
 		return nil
 	}
-}
-
-// Device represents a switch network device.
-type Device struct {
-	Model    string
-	Name     string
-	MAC      net.HardwareAddr
-	IP       net.IP
-	Netmask  net.IP
-	Gateway  net.IP
-	DHCP     bool
-	Firmware string
 }

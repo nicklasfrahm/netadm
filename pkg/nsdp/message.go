@@ -20,9 +20,9 @@ const (
 	RecordGateway
 	Record0x0009
 	Record0x000A
-	Record0x000B
+	RecordDHCP
 	Record0x000C
-	Record0x000D
+	RecordFirmware
 	Record0x000E
 	Record0x000F
 	RecordEndOfMessage = RecordType(0xFFFF)

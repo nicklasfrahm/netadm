@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"text/tabwriter"
 
 	"github.com/nicklasfrahm/nsdp/pkg/nsdp"
 	"github.com/spf13/cobra"
@@ -35,12 +37,16 @@ please increase the timeout and try again.`,
 			return errors.New("no switches found")
 		}
 
+		// Create table with tabwriter.
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.TabIndent)
+		fmt.Fprintf(w, "Name\tModel\tMAC Address\tIP Address\tDHCP\tFirmware\n")
+
 		// Print simple list of switches.
 		for _, device := range devices {
-			fmt.Println(device.Name)
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%v\t%s\n", device.Name, device.Model, device.MAC.String(), device.IP.String(), device.DHCP, device.Firmware)
 		}
 
-		return nil
+		return w.Flush()
 	},
 }
 
