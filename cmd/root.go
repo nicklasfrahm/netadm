@@ -16,6 +16,12 @@ var rootCmd = &cobra.Command{
 	Short: "CLI for the Netgear Switch Discovery Protocol (NSDP)",
 	Long: `A command line interface to manage Netgear Smart Switches
 via the UDP-based Netgear Switch Discovery Protocol (NSDP).`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if help {
+			cmd.Help()
+			os.Exit(0)
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		os.Exit(0)
@@ -25,7 +31,7 @@ via the UDP-based Netgear Switch Discovery Protocol (NSDP).`,
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&help, "help", "h", false, "display help for command")
-	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", time.Second, "timeout for commands")
+	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 100*time.Millisecond, "timeout for commands")
 }
 
 func Execute() {
