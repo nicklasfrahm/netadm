@@ -113,7 +113,7 @@ func NewDiscoveryMessage(iface *net.Interface) *Message {
 	// call is ASSUMED to be so much in the past that the sequence
 	// number is ASSUMED to be valid again. This SHOULD guarantee
 	// a response from the device on every call.
-	msg.Header.Sequence = uint16(time.Now().UnixNano()/1e9) % 0xFFFF
+	msg.Header.Sequence = uint16(time.Now().UnixNano()/1e6) % 0xFFFF
 
 	// Define the information we would like to receive during discovery.
 	scanRecords := []Record{
