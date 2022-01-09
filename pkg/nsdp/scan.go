@@ -1,7 +1,6 @@
 package nsdp
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"net"
@@ -54,19 +53,25 @@ func Scan(ifaceName string, options ...Option) ([]Device, error) {
 					return
 				}
 
-				responses = append(responses, buf[:n])
-
 				// TODO: Remove this when we have a proper response parser.
 				fmt.Printf("%s - %dB\n", addr.String(), n)
+				responses = append(responses, buf[:n])
+
+				msg := new(Message)
+				if err := msg.UnmarshalBinary(buf[:n]); err != nil {
+					fmt.Printf("%v", errors.New("received malformed message"))
+					continue
+				}
+
+				// TODO: Remove this when we have a proper response parser.
+				fmt.Printf("%v\n", *msg)
 			}
 		}
 	}()
 
-	// Create discovery message and buffer it to
-	// ensure it is sent in a single datagram.
-	msg := NewDiscoveryMessage(iface)
-	buf := bytes.NewBuffer([]byte{})
-	if err := msg.Write(buf); err != nil {
+	// Create discovery message and encode it into its binary form.
+	msg, err := NewDiscoveryMessage(iface).MarshalBinary()
+	if err != nil {
 		return nil, err
 	}
 
@@ -75,7 +80,7 @@ func Scan(ifaceName string, options ...Option) ([]Device, error) {
 		IP:   net.IPv4bcast,
 		Port: ServerPort,
 	}
-	if _, err := socket.WriteToUDP(buf.Bytes(), &deviceAddr); err != nil {
+	if _, err := socket.WriteToUDP(msg, &deviceAddr); err != nil {
 		return nil, err
 	}
 
