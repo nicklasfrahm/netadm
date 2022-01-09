@@ -118,9 +118,18 @@ func NewDiscoveryMessage(iface *net.Interface) *Message {
 	// Define the information we would like to receive during discovery.
 	scanRecords := []Record{
 		{Type: RecordModel},
+		{Type: Record0x0002},
 		{Type: RecordName},
 		{Type: RecordMAC},
+		{Type: Record0x0005},
 		{Type: RecordIP},
+		{Type: RecordNetmask},
+		{Type: RecordGateway},
+		{Type: Record0x000B},
+		{Type: Record0x000C},
+		{Type: Record0x000D},
+		{Type: Record0x000E},
+		{Type: Record0x000F},
 	}
 	msg.Records = append(msg.Records, scanRecords...)
 

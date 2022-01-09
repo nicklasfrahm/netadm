@@ -160,7 +160,7 @@ func (m *Message) Write(w io.Writer) error {
 	}
 
 	// Magic bytes that mark the end of the message.
-	binary.Write(w, binary.BigEndian, uint32(0x0000FFFF))
+	binary.Write(w, binary.BigEndian, uint32(0xFFFF0000))
 
 	return nil
 }
