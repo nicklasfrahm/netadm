@@ -34,6 +34,7 @@ func init() {
 	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 100*time.Millisecond, "timeout for commands")
 }
 
+// Execute starts the invocation of the command line interface.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

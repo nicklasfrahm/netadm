@@ -10,42 +10,26 @@ import (
 type RecordType uint16
 
 const (
-	// Manufacturer's model name of the device.
-	RecordModel RecordType = iota + 1
-	// Unknown record 0x0002.
-	Record0x0002
-	// User-defined name of the device.
-	RecordName
-	// MAC address of the device.
-	RecordMAC
-	// Unknown record 0x0005.
-	Record0x0005
-	// IP address of the device.
-	RecordIP
-	// Netmask of the device.
-	RecordNetmask
-	// Gateway of the device.
-	RecordGateway
-	// Unknown record 0x0009.
-	Record0x0009
-	// Unknown record 0x000A.
-	Record0x000A
-	// DHCP status of the device.
-	RecordDHCP
-	// Unknown record 0x000C.
-	Record0x000C
-	// Version of the firmware currently running on the device.
-	RecordFirmware
-	// Unknown record 0x000E.
-	Record0x000E
-	// Unknown record 0x000F.
-	Record0x000F
-	// A special record type that identifies
-	// the end of the message. Combined with
-	// a length of 0, this forms the 4 magic
-	// bytes that mark the end of the message
-	// (0xFFFF0000).
-	RecordEndOfMessage = RecordType(0xFFFF)
+	// RecordModel contains the device's manufacturer-provided model name.
+	RecordModel RecordType = 0x0001
+	// RecordName contains the device's user-defined name.
+	RecordName RecordType = 0x0003
+	// RecordMAC contains the device's MAC address.
+	RecordMAC RecordType = 0x0004
+	// RecordIP contains the device's IP address.
+	RecordIP RecordType = 0x0006
+	// RecordNetmask contains the device's netmask.
+	RecordNetmask RecordType = 0x0007
+	// RecordGateway contains the device's gateway.
+	RecordGateway RecordType = 0x0008
+	// RecordDHCP contains the device's DHCP status.
+	RecordDHCP RecordType = 0x000B
+	// RecordFirmware contains the device's firmware version.
+	RecordFirmware RecordType = 0x000D
+	// RecordEndOfMessage special record type that identifies the end
+	// of the message. Combined with a length of 0, this forms the 4
+	// magic bytes that mark the end of the message (0xFFFF0000).
+	RecordEndOfMessage RecordType = 0xFFFF
 )
 
 // OpCode describes the operation that a message is performing.

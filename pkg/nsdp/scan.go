@@ -2,7 +2,6 @@ package nsdp
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"time"
 )
@@ -52,8 +51,8 @@ func Scan(ifaceName string, options ...Option) ([]Device, error) {
 
 				msg := new(Message)
 				if err := msg.UnmarshalBinary(buf[:n]); err != nil {
-					fmt.Printf("%v", errors.New("received malformed message"))
-					continue
+					errs <- errors.New("malformed response message")
+					return
 				}
 
 				device := new(Device)
@@ -117,23 +116,19 @@ func NewDiscoveryMessage(iface *net.Interface) *Message {
 	// a response from the device on every call.
 	msg.Header.Sequence = uint16(time.Now().UnixNano()/1e6) % 0xFFFF
 
-	// Define the information we would like to receive during discovery.
-	// The records specified here are the same ones used by the original
-	// tool provided by the manufacturer.
+	// Define the information we would like to receive during
+	// discovery. The list of records is limited to the most
+	// common ones and therefore NOT the same as used by the
+	// original tool provided by the manufacturer.
 	scanRecords := []Record{
 		{Type: RecordModel},
-		{Type: Record0x0002},
 		{Type: RecordName},
 		{Type: RecordMAC},
-		{Type: Record0x0005},
 		{Type: RecordIP},
 		{Type: RecordNetmask},
 		{Type: RecordGateway},
 		{Type: RecordDHCP},
-		{Type: Record0x000C},
 		{Type: RecordFirmware},
-		{Type: Record0x000E},
-		{Type: Record0x000F},
 	}
 	msg.Records = append(msg.Records, scanRecords...)
 
