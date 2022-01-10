@@ -2,7 +2,6 @@ package nsdp
 
 import (
 	"context"
-	"time"
 )
 
 const (
@@ -17,7 +16,6 @@ const (
 // Options defines the configuration of an operation of this library.
 type Options struct {
 	Context context.Context
-	Timeout time.Duration
 }
 
 // Apply applies the option functions to the current set of options.
@@ -38,7 +36,6 @@ type Option func(*Options) error
 // for all operations of this library.
 func GetDefaultOptions() *Options {
 	return &Options{
-		Timeout: time.Second,
 		Context: context.Background(),
 	}
 }
