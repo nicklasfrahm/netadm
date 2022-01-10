@@ -10,21 +10,41 @@ import (
 type RecordType uint16
 
 const (
-	RecordModel  RecordType = iota + 1
-	Record0x0002            // Is this the serial number?
+	// Manufacturer's model name of the device.
+	RecordModel RecordType = iota + 1
+	// Unknown record 0x0002.
+	Record0x0002
+	// User-defined name of the device.
 	RecordName
+	// MAC address of the device.
 	RecordMAC
+	// Unknown record 0x0005.
 	Record0x0005
+	// IP address of the device.
 	RecordIP
+	// Netmask of the device.
 	RecordNetmask
+	// Gateway of the device.
 	RecordGateway
+	// Unknown record 0x0009.
 	Record0x0009
+	// Unknown record 0x000A.
 	Record0x000A
+	// DHCP status of the device.
 	RecordDHCP
+	// Unknown record 0x000C.
 	Record0x000C
+	// Version of the firmware currently running on the device.
 	RecordFirmware
+	// Unknown record 0x000E.
 	Record0x000E
+	// Unknown record 0x000F.
 	Record0x000F
+	// A special record type that identifies
+	// the end of the message. Combined with
+	// a length of 0, this forms the 4 magic
+	// bytes that mark the end of the message
+	// (0xFFFF0000).
 	RecordEndOfMessage = RecordType(0xFFFF)
 )
 
@@ -32,9 +52,17 @@ const (
 type OpCode uint8
 
 const (
+	// ReadRequest is the OpCode that identifies read
+	// request messages sent by the host client.
 	ReadRequest OpCode = iota + 1
+	// ReadResponse is the OpCode that identifies read
+	// response messages sent by the device server.
 	ReadResponse
+	// WriteRequest is the OpCode that identifies write
+	// request messages sent by the host client.
 	WriteRequest
+	// WriteResponse is the OpCode that identifies write
+	// response messages sent by the device server.
 	WriteResponse
 )
 

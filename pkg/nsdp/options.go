@@ -6,7 +6,11 @@ import (
 )
 
 const (
+	// ClientPort is the port the client host
+	// uses to send and receive messages.
 	ClientPort = 63321
+	// ServerPort is the port the device server
+	// uses to send and receive messages.
 	ServerPort = 63322
 )
 
