@@ -25,6 +25,9 @@ please increase the timeout and try again.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		devices := make([]nsdp.Device, 0)
 
+		// Create new discovery message.
+		request := nsdp.NewDiscoveryMessage()
+
 		// Retry operation if retries is greater than 0.
 		for i := uint(0); i <= retries; i++ {
 			// Create context to handle timeout.
@@ -32,7 +35,7 @@ please increase the timeout and try again.`,
 			defer cancel()
 
 			// Run scan for devices.
-			devs, err := nsdp.Scan(interfaceName, nsdp.WithContext(ctx))
+			devs, err := nsdp.RequestDevice(interfaceName, request, nsdp.WithContext(ctx))
 			if err != nil {
 				return err
 			}

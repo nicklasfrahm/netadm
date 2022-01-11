@@ -2,8 +2,18 @@ package nsdp
 
 import (
 	"errors"
+	"fmt"
 	"net"
 )
+
+// MACMarshalBinary encodes the MAC address into a fixed-length binary form.
+func MACMarshalBinary(mac *net.HardwareAddr) [6]uint8 {
+	var macBinary [6]uint8
+	for i := 0; i < len(macBinary); i++ {
+		macBinary[i] = uint8((*mac)[i])
+	}
+	return macBinary
+}
 
 // GetInterface fetches the interface based on the provided
 // interface name if it up.
@@ -11,7 +21,7 @@ func GetInterface(ifaceName string) (*net.Interface, error) {
 	// Fetch specified interface by name.
 	iface, err := net.InterfaceByName(ifaceName)
 	if err != nil {
-		return nil, errors.New("interface unknown")
+		return nil, fmt.Errorf(`interface not found with name "%s"`, ifaceName)
 	}
 
 	// Check if interface is up.

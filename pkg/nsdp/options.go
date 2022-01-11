@@ -27,16 +27,6 @@ type Selector struct {
 	MAC *net.HardwareAddr
 }
 
-// MACMarshalBinary encodes the Selector's MAC
-// address into a fixed-length binary form.
-func (s *Selector) MACMarshalBinary() [6]uint8 {
-	var mac [6]uint8
-	for i := 0; i < len(mac); i++ {
-		mac[i] = uint8((*s.MAC)[i])
-	}
-	return mac
-}
-
 // Options defines the configuration of an operation of this library.
 type Options struct {
 	Context  context.Context
@@ -82,7 +72,7 @@ func WithContext(ctx context.Context) Option {
 func WithMAC(mac *net.HardwareAddr) Option {
 	return func(o *Options) error {
 		if mac == nil {
-			return errors.New("mac must not be empty")
+			return errors.New("MAC must not be empty")
 		}
 
 		o.Selector = &Selector{MAC: mac}

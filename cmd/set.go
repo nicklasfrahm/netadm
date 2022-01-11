@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/nicklasfrahm/nsdp/pkg/nsdp"
 	"github.com/spf13/cobra"
@@ -20,7 +21,7 @@ to see a list of available keys.`,
 		// Check if all keys are valid.
 		for _, key := range args {
 			if nsdp.RecordNames[key] == nil {
-				return errors.New("unknown configuration key")
+				return fmt.Errorf("unknown configuration key %s", key)
 			}
 		}
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"time"
 )
 
 // RecordID returns the ID of the record type.
@@ -136,16 +137,31 @@ type Message struct {
 
 // Message creates a new message to the device with
 // the default options.
-func NewMessage() *Message {
+func NewMessage(operation OpCode) *Message {
 	msg := Message{
 		Header: Header{
 			// The version of the protocol is always 1.
 			Version: 1,
 			// The signature of the protocol is always "NSDP".
 			Signature: [4]uint8{'N', 'S', 'D', 'P'},
+			// Configure the operation based on the provided OpCode.
+			Operation: operation,
+			// Call all devices by default.
+			ServerMAC: MACMarshalBinary(SelectorAll.MAC),
 		},
 		Records: make([]Record, 0),
 	}
+
+	// HACK: Because we want the CLI to be stateless we can't
+	// keep track of a sequence number between subsequent calls.
+	// But if we use the remainder when dividing the current
+	// timestamp by our maximum sequence number we can get a
+	// number that is very likely to be incrementing between
+	// subsequent calls. If it is not incrementing the previous
+	// call is ASSUMED to be so much in the past that the sequence
+	// number is ASSUMED to be valid again. This SHOULD maximize
+	// the chance to get a response from the device on every call.
+	msg.Header.Sequence = uint16(time.Now().UnixNano()/1e6) % 0xFFFF
 
 	return &msg
 }
@@ -225,4 +241,34 @@ func (m *Message) MarshalBinary() ([]byte, error) {
 	}
 
 	return w.Bytes(), nil
+}
+
+// NewDiscoveryMessage creates a new message that can be
+// broadcasted to discover other devices on the network.
+func NewDiscoveryMessage() *Message {
+	// Create discovery message.
+	msg := NewMessage(ReadRequest)
+
+	// The server MAC during discovery should be all-zero
+	// as this will be interpreted as a multicast address
+	// and cause all devices to respond to the message.
+	msg.Header.ServerMAC = MACMarshalBinary(SelectorAll.MAC)
+
+	// Define the information we would like to receive during
+	// discovery. The list of records is limited to the most
+	// common ones and therefore NOT the same as used by the
+	// original tool provided by the manufacturer.
+	scanRecords := []Record{
+		{Type: RecordModel.ID},
+		{Type: RecordName.ID},
+		{Type: RecordMAC.ID},
+		{Type: RecordIP.ID},
+		{Type: RecordNetmask.ID},
+		{Type: RecordGateway.ID},
+		{Type: RecordDHCP.ID},
+		{Type: RecordFirmware.ID},
+	}
+	msg.Records = append(msg.Records, scanRecords...)
+
+	return msg
 }
