@@ -121,14 +121,14 @@ func NewDiscoveryMessage(iface *net.Interface) *Message {
 	// common ones and therefore NOT the same as used by the
 	// original tool provided by the manufacturer.
 	scanRecords := []Record{
-		{Type: RecordModel},
-		{Type: RecordName},
-		{Type: RecordMAC},
-		{Type: RecordIP},
-		{Type: RecordNetmask},
-		{Type: RecordGateway},
-		{Type: RecordDHCP},
-		{Type: RecordFirmware},
+		{Type: RecordModel.ID},
+		{Type: RecordName.ID},
+		{Type: RecordMAC.ID},
+		{Type: RecordIP.ID},
+		{Type: RecordNetmask.ID},
+		{Type: RecordGateway.ID},
+		{Type: RecordDHCP.ID},
+		{Type: RecordFirmware.ID},
 	}
 	msg.Records = append(msg.Records, scanRecords...)
 

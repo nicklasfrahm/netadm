@@ -6,31 +6,80 @@ import (
 	"errors"
 )
 
-// RecordType describes which data a record contains.
-type RecordType uint16
+// RecordID returns the ID of the record type.
+type RecordID uint16
 
-const (
+// RecordType describes which data a record contains.
+type RecordType struct {
+	ID      RecordID
+	Name    string
+	Example string
+}
+
+// NewRecordType creates a new record type.
+func NewRecordType(id uint16, name string, example string) *RecordType {
+	return &RecordType{
+		ID:      RecordID(id),
+		Name:    name,
+		Example: example,
+	}
+}
+
+var (
+	// RecordNone is a placeholder for an invalid or empty record.
+	RecordNone = NewRecordType(0x0000, "none", "")
 	// RecordModel contains the device's manufacturer-provided model name.
-	RecordModel RecordType = 0x0001
+	RecordModel = NewRecordType(0x0001, "model", "GS308E")
 	// RecordName contains the device's user-defined name.
-	RecordName RecordType = 0x0003
+	RecordName = NewRecordType(0x0003, "name", "switch-0")
 	// RecordMAC contains the device's MAC address.
-	RecordMAC RecordType = 0x0004
+	RecordMAC = NewRecordType(0x0004, "mac", "33:0b:c9:5e:51:3a")
 	// RecordIP contains the device's IP address.
-	RecordIP RecordType = 0x0006
+	RecordIP = NewRecordType(0x0006, "ip", "192.168.0.253")
 	// RecordNetmask contains the device's netmask.
-	RecordNetmask RecordType = 0x0007
+	RecordNetmask = NewRecordType(0x0007, "netmask", "255.255.255.0")
 	// RecordGateway contains the device's gateway.
-	RecordGateway RecordType = 0x0008
+	RecordGateway = NewRecordType(0x0008, "gateway", "192.168.0.254")
 	// RecordDHCP contains the device's DHCP status.
-	RecordDHCP RecordType = 0x000B
+	RecordDHCP = NewRecordType(0x000B, "dhcp", "false")
 	// RecordFirmware contains the device's firmware version.
-	RecordFirmware RecordType = 0x000D
+	RecordFirmware = NewRecordType(0x000D, "firmware", "1.00.10")
 	// RecordEndOfMessage special record type that identifies the end
 	// of the message. Combined with a length of 0, this forms the 4
 	// magic bytes that mark the end of the message (0xFFFF0000).
-	RecordEndOfMessage RecordType = 0xFFFF
+	RecordEndOfMessage = NewRecordType(0xFFFF, "eom", "")
 )
+
+// RecordIDs maps the ID of a record to a record type.
+var RecordIDs = map[RecordID]*RecordType{
+	RecordNone.ID:         RecordNone,
+	RecordModel.ID:        RecordModel,
+	RecordName.ID:         RecordName,
+	RecordMAC.ID:          RecordMAC,
+	RecordIP.ID:           RecordIP,
+	RecordNetmask.ID:      RecordNetmask,
+	RecordGateway.ID:      RecordGateway,
+	RecordDHCP.ID:         RecordDHCP,
+	RecordFirmware.ID:     RecordFirmware,
+	RecordEndOfMessage.ID: RecordEndOfMessage,
+}
+
+// RecordNames maps the name of a record to a record type.
+var RecordNames = indexRecordNames()
+
+// indexRecordNames builds an index of the record names.
+func indexRecordNames() map[string]*RecordType {
+	recordNames := make(map[string]*RecordType, len(RecordIDs))
+
+	for _, record := range RecordIDs {
+		// Exclude the None and the EndOfMessage record types.
+		if record.Example != "" {
+			recordNames[record.Name] = record
+		}
+	}
+
+	return recordNames
+}
 
 // OpCode describes the operation that a message is performing.
 type OpCode uint8
@@ -55,7 +104,7 @@ const (
 // possible to encode variable length values
 // in a binary format.
 type Record struct {
-	Type  RecordType
+	Type  RecordID
 	Len   uint16
 	Value []uint8
 }
@@ -120,7 +169,7 @@ func (m *Message) UnmarshalBinary(data []byte) error {
 		}
 
 		// Check if magic bytes for end of message are reached.
-		if record.Type == RecordEndOfMessage {
+		if record.Type == RecordEndOfMessage.ID {
 			// Check if the message is valid.
 			if record.Len != 0 {
 				return errors.New("invalid end of message")

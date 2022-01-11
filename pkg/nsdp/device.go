@@ -19,22 +19,24 @@ type Device struct {
 // UnmarshalMessage decodes a message into a Device.
 func (d *Device) UnmarshalMessage(msg *Message) error {
 	for _, record := range msg.Records {
+		// TODO: Can we use the reflect package for this
+		// without making typing implicit for the Device?
 		switch record.Type {
-		case RecordModel:
+		case RecordModel.ID:
 			d.Model = string(record.Value)
-		case RecordName:
+		case RecordName.ID:
 			d.Name = string(record.Value)
-		case RecordMAC:
+		case RecordMAC.ID:
 			d.MAC = net.HardwareAddr(record.Value)
-		case RecordIP:
+		case RecordIP.ID:
 			d.IP = net.IP(record.Value)
-		case RecordNetmask:
+		case RecordNetmask.ID:
 			d.Netmask = net.IP(record.Value)
-		case RecordGateway:
+		case RecordGateway.ID:
 			d.Gateway = net.IP(record.Value)
-		case RecordDHCP:
+		case RecordDHCP.ID:
 			d.DHCP = record.Value[0] == 1
-		case RecordFirmware:
+		case RecordFirmware.ID:
 			d.Firmware = string(record.Value)
 		}
 	}

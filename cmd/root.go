@@ -25,8 +25,8 @@ Note:
   not succeed if the device needs to refresh its
   ARP cache by performing a MAC address lookup of
   the host via the host IP. This happens on the
-  the first interaction or when the cache naturally
-  expires, I assume, which appears to be every 5
+  the first interaction or, I assume, when the
+  cache naturally, which appears to be every 5
   minutes or so.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if help {
@@ -44,7 +44,7 @@ Note:
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&help, "help", "h", false, "display help for command")
 	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 100*time.Millisecond, "timeout per attempt")
-	scanCmd.PersistentFlags().UintVarP(&retries, "retries", "r", 1, "number of retries to perform")
+	rootCmd.PersistentFlags().UintVarP(&retries, "retries", "r", 1, "number of retries to perform")
 }
 
 // Execute starts the invocation of the command line interface.
