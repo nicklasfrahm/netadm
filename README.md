@@ -27,7 +27,7 @@ via the UDP-based Netgear Switch Discovery Protocol (NSDP).
 Note:
   To achieve a consistent behavior all operations
   are executed twice and the results are merged.
-  This is done to work around that operations do
+  This is done to work around operations that do
   not succeed if the device needs to refresh its
   ARP cache by performing a MAC address lookup of
   the host via the host IP. This happens on the
@@ -46,6 +46,7 @@ Available Commands:
   if          List network interfaces
   keys        List available configuration keys
   scan        Scan for devices
+  set         Write configuration keys
 
 Flags:
   -h, --help               display help for command

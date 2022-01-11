@@ -25,6 +25,8 @@ func NewRecordType(id uint16, name string, example string) *RecordType {
 	}
 }
 
+// TODO: Add missing records types once all operations are implemented.
+
 var (
 	// RecordNone is a placeholder for an invalid or empty record.
 	RecordNone = NewRecordType(0x0000, "none", "")

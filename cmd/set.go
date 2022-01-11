@@ -7,10 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var getCmd = &cobra.Command{
-	Use:   "get [keys]",
-	Short: "Read configuration keys",
-	Long: `A command that allows you to read the
+var setCmd = &cobra.Command{
+	Use:   "set [key=value]",
+	Short: "Write configuration keys",
+	Long: `A command that allows you to write the
 list of specified configuration keys.
 
 You may run the "keys" subcommand
@@ -24,11 +24,11 @@ to see a list of available keys.`,
 			}
 		}
 
-		// TODO: Implement "get" command logic.
+		// TODO: Implement "set" command logic.
 		return errors.New("not implemented")
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(getCmd)
+	rootCmd.AddCommand(setCmd)
 }
