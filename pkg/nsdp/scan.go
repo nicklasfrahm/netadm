@@ -1,7 +1,6 @@
 package nsdp
 
 import (
-	"errors"
 	"net"
 	"time"
 )
@@ -14,81 +13,31 @@ func Scan(ifaceName string, options ...Option) ([]Device, error) {
 		return nil, err
 	}
 
-	// Check if the provided interface has a valid configuration.
-	iface, ip, err := GetValidInterface(ifaceName)
+	// Fetch network interface.
+	iface, err := GetInterface(ifaceName)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a UDP socket to listen for incoming packets.
-	socketAddr := net.UDPAddr{
-		IP:   *ip,
-		Port: ClientPort,
-	}
-	socket, err := net.ListenUDP("udp", &socketAddr)
+	// Create new discovery message.
+	request := NewDiscoveryMessage(iface)
+
+	// Send message to broadcast address.
+	responses, err := Send(opts.Context, iface, request)
 	if err != nil {
 		return nil, err
 	}
-	defer socket.Close()
 
-	devices := make([]Device, 0)
-	errs := make(chan error, 1)
-
-	// Create a goroutine to listen for incoming packets.
-	go func() {
-		for {
-			select {
-			case <-opts.Context.Done():
-				return
-			default:
-				buf := make([]byte, 1500)
-
-				n, err := socket.Read(buf)
-				if err != nil {
-					errs <- err
-					return
-				}
-
-				msg := new(Message)
-				if err := msg.UnmarshalBinary(buf[:n]); err != nil {
-					errs <- errors.New("malformed response message")
-					return
-				}
-
-				// TODO: Check operation result status code.
-				// I assume all non-zero values are bad.
-
-				device := new(Device)
-				if err := device.UnmarshalMessage(msg); err != nil {
-					errs <- err
-					return
-				}
-				devices = append(devices, *device)
-			}
+	// Convert responses to devices.
+	devices := make([]Device, len(responses))
+	for i, response := range responses {
+		// This is safe because we previously allocated the slice.
+		if err := devices[i].UnmarshalMessage(&response); err != nil {
+			return nil, err
 		}
-	}()
-
-	// Create discovery message and encode it into its binary form.
-	msg, err := NewDiscoveryMessage(iface).MarshalBinary()
-	if err != nil {
-		return nil, err
 	}
 
-	// Send the message to the broadcast address.
-	deviceAddr := net.UDPAddr{
-		IP:   net.IPv4bcast,
-		Port: ServerPort,
-	}
-	if _, err := socket.WriteToUDP(msg, &deviceAddr); err != nil {
-		return nil, err
-	}
-
-	select {
-	case <-opts.Context.Done():
-		return devices, nil
-	case err := <-errs:
-		return nil, err
-	}
+	return devices, nil
 }
 
 // NewDiscoveryMessage creates a new message that can be
@@ -107,7 +56,7 @@ func NewDiscoveryMessage(iface *net.Interface) *Message {
 	// The server MAC during discovery should be all-zero
 	// as this will be interpreted as a multicast address
 	// and cause all devices to respond to the message.
-	msg.Header.ServerMAC = [6]uint8{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	msg.Header.ServerMAC = SelectorAll.MACMarshalBinary()
 	// HACK: Because we want the CLI to be stateless we can't
 	// keep track of a sequence number between subsequent calls.
 	// But if we use the remainder when dividing the current
@@ -136,48 +85,4 @@ func NewDiscoveryMessage(iface *net.Interface) *Message {
 	msg.Records = append(msg.Records, scanRecords...)
 
 	return msg
-}
-
-// GetValidInterface fetches the interface based on the provided
-// interface name if it is up and has an IPv4 address.
-func GetValidInterface(ifaceName string) (*net.Interface, *net.IP, error) {
-	// Fetch specified interface by name.
-	iface, err := net.InterfaceByName(ifaceName)
-	if err != nil {
-		return nil, nil, errors.New("interface unknown")
-	}
-
-	// Check if interface is up.
-	if iface.Flags&net.FlagUp == 0 {
-		return nil, nil, errors.New("interface is down")
-	}
-
-	// Check if interface has addresses.
-	addresses, err := iface.Addrs()
-	if err != nil {
-		return nil, nil, err
-	}
-	if len(addresses) == 0 {
-		return nil, nil, errors.New("interface has no address")
-	}
-
-	// Select IPv4 interface address.
-	var ip *net.IP
-	var address net.Addr
-	for _, addr := range addresses {
-		// Check if address is IPv4.
-		ipNet, ok := addr.(*net.IPNet)
-		if ok && ipNet.IP.To4() != nil {
-			ip = &ipNet.IP
-			address = addr
-			break
-		}
-	}
-
-	// Check if interface has a valid IPv4 address.
-	if address == nil {
-		return nil, nil, errors.New("interface has no valid IPv4 address")
-	}
-
-	return iface, ip, nil
 }

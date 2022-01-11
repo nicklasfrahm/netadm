@@ -2,6 +2,8 @@ package nsdp
 
 import (
 	"context"
+	"errors"
+	"net"
 )
 
 const (
@@ -13,9 +15,32 @@ const (
 	ServerPort = 63322
 )
 
+var (
+	// SelectorAll is a selector that will cause
+	// all devices to respond to the mesage.
+	SelectorAll = &Selector{MAC: &net.HardwareAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}
+)
+
+// Selector is a type that allows it to
+// target specific devices with a message.
+type Selector struct {
+	MAC *net.HardwareAddr
+}
+
+// MACMarshalBinary encodes the Selector's MAC
+// address into a fixed-length binary form.
+func (s *Selector) MACMarshalBinary() [6]uint8 {
+	var mac [6]uint8
+	for i := 0; i < len(mac); i++ {
+		mac[i] = uint8((*s.MAC)[i])
+	}
+	return mac
+}
+
 // Options defines the configuration of an operation of this library.
 type Options struct {
-	Context context.Context
+	Context  context.Context
+	Selector *Selector
 }
 
 // Apply applies the option functions to the current set of options.
@@ -36,7 +61,8 @@ type Option func(*Options) error
 // for all operations of this library.
 func GetDefaultOptions() *Options {
 	return &Options{
-		Context: context.Background(),
+		Context:  context.Background(),
+		Selector: SelectorAll,
 	}
 }
 
@@ -47,6 +73,19 @@ func GetDefaultOptions() *Options {
 func WithContext(ctx context.Context) Option {
 	return func(o *Options) error {
 		o.Context = ctx
+		return nil
+	}
+}
+
+// WithMAC specifies which devices to send
+// the message to.
+func WithMAC(mac *net.HardwareAddr) Option {
+	return func(o *Options) error {
+		if mac == nil {
+			return errors.New("mac must not be empty")
+		}
+
+		o.Selector = &Selector{MAC: mac}
 		return nil
 	}
 }
