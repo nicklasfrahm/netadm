@@ -21,7 +21,12 @@ this CLI.
 
 By default the command will list only
 interfaces which are up, have a MAC
-and an IP address.`,
+and an IP address.
+
+Please also note that this operation
+does not interact with the switches.
+Therefore it will ignore the retries
+command line flag.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Get all network interfaces.
 		interfaces, err := net.Interfaces()

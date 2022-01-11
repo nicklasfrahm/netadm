@@ -43,7 +43,7 @@ Note:
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&help, "help", "h", false, "display help for command")
-	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 100*time.Millisecond, "timeout for commands")
+	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 100*time.Millisecond, "timeout per attempt")
 	scanCmd.PersistentFlags().UintVarP(&retries, "retries", "r", 1, "number of retries to perform")
 }
 
