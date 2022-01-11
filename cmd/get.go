@@ -8,7 +8,7 @@ import (
 )
 
 var getCmd = &cobra.Command{
-	Use:   "get [keys]",
+	Use:   "get [key ...]",
 	Short: "Read configuration keys",
 	Long: `A command that allows you to read the
 list of specified configuration keys.

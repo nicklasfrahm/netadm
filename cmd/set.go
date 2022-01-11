@@ -8,7 +8,7 @@ import (
 )
 
 var setCmd = &cobra.Command{
-	Use:   "set [key=value]",
+	Use:   "set [key=value ...]",
 	Short: "Write configuration keys",
 	Long: `A command that allows you to write the
 list of specified configuration keys.
