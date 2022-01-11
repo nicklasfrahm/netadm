@@ -55,6 +55,9 @@ func Scan(ifaceName string, options ...Option) ([]Device, error) {
 					return
 				}
 
+				// TODO: Check operation result status code.
+				// I assume all non-zero values are bad.
+
 				device := new(Device)
 				if err := device.UnmarshalMessage(msg); err != nil {
 					errs <- err

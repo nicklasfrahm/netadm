@@ -15,6 +15,8 @@ var keysCmd = &cobra.Command{
 	Long: `A command that allows you to list all
 available configuration keys.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// TODO: Sort keys by record ID?
+
 		// Create table with tabwriter.
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.TabIndent)
 		fmt.Fprintf(w, "ID\tName\tExample\n")
