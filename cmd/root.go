@@ -26,8 +26,8 @@ Note:
   ARP cache by performing a MAC address lookup of
   the host via the host IP. This happens on the
   the first interaction or, I assume, when the
-  cache naturally, which appears to be every 5
-  minutes or so.`,
+  cache expires naturally, which appears to be
+  every 5 minutes or so.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if help {
 			cmd.Help()
