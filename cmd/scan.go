@@ -11,8 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var retries uint
-
 var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Scan for devices",
@@ -23,16 +21,7 @@ code if the scan does not return anything.
 
 If your scan doesn't return any devices
 depite them being present on your network
-please increase the timeout and try again.
-
-Another known issue is that the scan does
-not return a device if the device needs to
-refresh its ARP cache by performing a MAC
-address lookup of the host based on its IP.
-This happens on the very first interaction
-or when the cache naturally expires, which
-appears to be every 5 minutes or so. This
-issue can be avoided using the retries flag.`,
+please increase the timeout and try again.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		devices := make([]nsdp.Device, 0)
 
@@ -48,10 +37,8 @@ issue can be avoided using the retries flag.`,
 				return err
 			}
 
-			// If more devices were found, update result.
-			if len(devs) > len(devices) {
-				devices = devs
-			}
+			// Deduplicate results from all attempts.
+			devices = nsdp.Deduplicate(devices, devs)
 		}
 
 		// Check if any devices were found.
@@ -74,7 +61,6 @@ issue can be avoided using the retries flag.`,
 
 func init() {
 	scanCmd.Flags().StringVarP(&interfaceName, "interface", "i", "", "name of the interface to use")
-	scanCmd.Flags().UintVarP(&retries, "retries", "r", 0, "number of retries to perform")
 	scanCmd.MarkFlagRequired("interface")
 
 	rootCmd.AddCommand(scanCmd)
