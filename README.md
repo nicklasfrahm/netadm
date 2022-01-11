@@ -24,19 +24,33 @@ Below you may find the usage text of the command line interface.
 A command line interface to manage Netgear Smart Switches
 via the UDP-based Netgear Switch Discovery Protocol (NSDP).
 
+Note:
+  To achieve a consistent behavior all operations
+  are executed twice and the results are merged.
+  This is done to work around that operations do
+  not succeed if the device needs to refresh its
+  ARP cache by performing a MAC address lookup of
+  the host via the host IP. This happens on the
+  the first interaction or, I assume, when the
+  cache naturally, which appears to be every 5
+  minutes or so.
+
 Usage:
   nsdp [flags]
   nsdp [command]
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
+  get         Read configuration keys
   help        Help about any command
   if          List network interfaces
+  keys        List available configuration keys
   scan        Scan for devices
 
 Flags:
   -h, --help               display help for command
-  -t, --timeout duration   timeout for commands (default 1s)
+  -r, --retries uint       number of retries to perform (default 1)
+  -t, --timeout duration   timeout per attempt (default 100ms)
 
 Use "nsdp [command] --help" for more information about a command.
 ```
