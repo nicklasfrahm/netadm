@@ -4,23 +4,25 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"net"
+	"strings"
 	"time"
 )
 
-// RecordID returns the ID of the record type.
-type RecordID uint16
+// RecordTypeID is the ID of a RecordType.
+type RecordTypeID uint16
 
-// RecordType describes which data a record contains.
+// RecordType describes which data a Record contains.
 type RecordType struct {
-	ID      RecordID
+	ID      RecordTypeID
 	Name    string
-	Example string
+	Example interface{}
 }
 
 // NewRecordType creates a new record type.
-func NewRecordType(id uint16, name string, example string) *RecordType {
+func NewRecordType(id uint16, name string, example interface{}) *RecordType {
 	return &RecordType{
-		ID:      RecordID(id),
+		ID:      RecordTypeID(id),
 		Name:    name,
 		Example: example,
 	}
@@ -30,31 +32,31 @@ func NewRecordType(id uint16, name string, example string) *RecordType {
 
 var (
 	// RecordNone is a placeholder for an invalid or empty record.
-	RecordNone = NewRecordType(0x0000, "none", "")
+	RecordNone = NewRecordType(0x0000, "None", nil)
 	// RecordModel contains the device's manufacturer-provided model name.
-	RecordModel = NewRecordType(0x0001, "model", "GS308E")
+	RecordModel = NewRecordType(0x0001, "Model", "GS308E")
 	// RecordName contains the device's user-defined name.
-	RecordName = NewRecordType(0x0003, "name", "switch-0")
+	RecordName = NewRecordType(0x0003, "Name", "switch-0")
 	// RecordMAC contains the device's MAC address.
-	RecordMAC = NewRecordType(0x0004, "mac", "33:0b:c9:5e:51:3a")
+	RecordMAC = NewRecordType(0x0004, "MAC", net.HardwareAddr{0x33, 0x0B, 0xC9, 0x5E, 0x51, 0x3A})
 	// RecordIP contains the device's IP address.
-	RecordIP = NewRecordType(0x0006, "ip", "192.168.0.253")
+	RecordIP = NewRecordType(0x0006, "IP", net.IP{192, 168, 0, 253})
 	// RecordNetmask contains the device's netmask.
-	RecordNetmask = NewRecordType(0x0007, "netmask", "255.255.255.0")
+	RecordNetmask = NewRecordType(0x0007, "Netmask", net.IP{255, 255, 255, 0})
 	// RecordGateway contains the device's gateway.
-	RecordGateway = NewRecordType(0x0008, "gateway", "192.168.0.254")
+	RecordGateway = NewRecordType(0x0008, "Gateway", net.IP{192, 168, 0, 254})
 	// RecordDHCP contains the device's DHCP status.
-	RecordDHCP = NewRecordType(0x000B, "dhcp", "false")
+	RecordDHCP = NewRecordType(0x000B, "DHCP", false)
 	// RecordFirmware contains the device's firmware version.
-	RecordFirmware = NewRecordType(0x000D, "firmware", "1.00.10")
+	RecordFirmware = NewRecordType(0x000D, "Firmware", "1.00.10")
 	// RecordEndOfMessage special record type that identifies the end
 	// of the message. Combined with a length of 0, this forms the 4
 	// magic bytes that mark the end of the message (0xFFFF0000).
-	RecordEndOfMessage = NewRecordType(0xFFFF, "eom", "")
+	RecordEndOfMessage = NewRecordType(0xFFFF, "EndOfMessage", nil)
 )
 
-// RecordIDs maps the ID of a record to a record type.
-var RecordIDs = map[RecordID]*RecordType{
+// RecordTypeIDs maps the ID of a record to a record type.
+var RecordTypeIDs = map[RecordTypeID]*RecordType{
 	RecordNone.ID:         RecordNone,
 	RecordModel.ID:        RecordModel,
 	RecordName.ID:         RecordName,
@@ -67,17 +69,17 @@ var RecordIDs = map[RecordID]*RecordType{
 	RecordEndOfMessage.ID: RecordEndOfMessage,
 }
 
-// RecordNames maps the name of a record to a record type.
-var RecordNames = indexRecordNames()
+// RecordTypeNames maps the name of a record to a record type.
+var RecordTypeNames = indexRecordTypeNames()
 
-// indexRecordNames builds an index of the record names.
-func indexRecordNames() map[string]*RecordType {
-	recordNames := make(map[string]*RecordType, len(RecordIDs))
+// indexRecordTypeNames builds an index of the record names.
+func indexRecordTypeNames() map[string]*RecordType {
+	recordNames := make(map[string]*RecordType, len(RecordTypeIDs))
 
-	for _, record := range RecordIDs {
+	for _, record := range RecordTypeIDs {
 		// Exclude the None and the EndOfMessage record types.
-		if record.Example != "" {
-			recordNames[record.Name] = record
+		if record.Example != nil {
+			recordNames[strings.ToLower(record.Name)] = record
 		}
 	}
 
@@ -107,7 +109,7 @@ const (
 // possible to encode variable length values
 // in a binary format.
 type Record struct {
-	Type  RecordID
+	Type  RecordTypeID
 	Len   uint16
 	Value []uint8
 }

@@ -21,7 +21,10 @@ this CLI.
 
 By default the command will list only
 interfaces which are up, have a MAC
-and an IP address.
+and an IPv4 address. I am not sure if
+IPv6 is supported by the protocol. In
+theory it could be, but this CLI only
+supports IPv4 for now.
 
 Please also note that this operation
 does not interact with the switches.
@@ -41,7 +44,7 @@ command line flag.`,
 
 		// Create table with tabwriter.
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.TabIndent)
-		fmt.Fprintf(w, "Interface\tMAC Address\tNetwork Addresses\n")
+		fmt.Fprintf(w, "Interface\tMAC Address\tIP Addresses\n")
 
 		// Print all interfaces.
 		for _, iface := range interfaces {

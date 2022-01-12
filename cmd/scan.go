@@ -35,13 +35,13 @@ please increase the timeout and try again.`,
 			defer cancel()
 
 			// Run scan for devices.
-			devs, err := nsdp.RequestDevice(interfaceName, request, nsdp.WithContext(ctx))
+			devs, err := nsdp.RequestDevices(interfaceName, request, nsdp.WithContext(ctx))
 			if err != nil {
 				return err
 			}
 
 			// Deduplicate results from all attempts.
-			devices = nsdp.Deduplicate(devices, devs)
+			devices = nsdp.DeduplicateDevices(devices, devs)
 		}
 
 		// Check if any devices were found.

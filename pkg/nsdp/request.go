@@ -1,8 +1,8 @@
 package nsdp
 
-// RequestMessage is a high-level API that sends messages via the
+// RequestMessages is a high-level API that sends messages via the
 // low-level Send API and returns the results as a slice of Messages.
-func RequestMessage(ifaceName string, request *Message, options ...Option) ([]Message, error) {
+func RequestMessages(ifaceName string, request *Message, options ...Option) ([]Message, error) {
 	// Get operation options.
 	opts, err := GetDefaultOptions().Apply(options...)
 	if err != nil {
@@ -34,11 +34,11 @@ func RequestMessage(ifaceName string, request *Message, options ...Option) ([]Me
 	return responses, nil
 }
 
-// RequestDevice is a high-level API that sends messages via the high-level
+// RequestDevices is a high-level API that sends messages via the high-level
 // RequestMessage API and returns the results as a slice of Devices.
-func RequestDevice(ifaceName string, request *Message, options ...Option) ([]Device, error) {
+func RequestDevices(ifaceName string, request *Message, options ...Option) ([]Device, error) {
 	// Use the RequestMessage function to get the responses.
-	responses, err := RequestMessage(ifaceName, request, options...)
+	responses, err := RequestMessages(ifaceName, request, options...)
 	if err != nil {
 		return nil, err
 	}

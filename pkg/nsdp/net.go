@@ -32,8 +32,8 @@ func GetInterface(ifaceName string) (*net.Interface, error) {
 	return iface, nil
 }
 
-// GetInterfaceIP fetches the IPv4 address of the interface.
-func GetInterfaceIP(iface *net.Interface) (*net.IP, error) {
+// GetInterfaceIPv4 fetches the IPv4 address of the interface.
+func GetInterfaceIPv4(iface *net.Interface) (*net.IP, error) {
 	// Check if interface has addresses.
 	addresses, err := iface.Addrs()
 	if err != nil {

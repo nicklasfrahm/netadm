@@ -10,7 +10,7 @@ import (
 // Send is a low-level API that allows it to send and receive messages directly.
 func Send(ctx context.Context, iface *net.Interface, request *Message) ([]Message, error) {
 	// Check if the provided interface has a valid configuration.
-	ip, err := GetInterfaceIP(iface)
+	ip, err := GetInterfaceIPv4(iface)
 	if err != nil {
 		return nil, err
 	}
