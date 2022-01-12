@@ -130,6 +130,10 @@ func (r Record) Reflect() reflect.Value {
 		return reflect.ValueOf((*byte)(nil))
 	}
 
+	// TODO: I have the slight suspicion that
+	// there is a way to get rid of this. To
+	// say it like Eminem, "Something's wrong.
+	// I can feel it."
 	switch rt.Example.(type) {
 	case string:
 		return reflect.ValueOf(string(r.Value))
