@@ -1,6 +1,6 @@
 # Netgear Switch Discovery Protocol (NSDP) 🔍
 
-![https://goreportcard.com/report/github.com/nicklasfrahm/nsdp](https://goreportcard.com/badge/github.com/nicklasfrahm/nsdp)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nicklasfrahm/nsdp)](https://goreportcard.com/report/github.com/nicklasfrahm/nsdp)
 
 A CLI and client library to manage Netgear Smart Switches written in [Go][website-go].
 

@@ -137,7 +137,7 @@ type Message struct {
 	Records []Record
 }
 
-// Message creates a new message to the device with
+// NewMessage creates a new message to the device with
 // the default options.
 func NewMessage(operation OpCode) *Message {
 	msg := Message{
