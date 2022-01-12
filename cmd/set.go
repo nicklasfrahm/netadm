@@ -20,7 +20,7 @@ to see a list of available keys.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Check if all keys are valid.
 		for _, key := range args {
-			if nsdp.RecordTypeNames[key] == nil {
+			if nsdp.RecordTypeByName[key] == nil {
 				return fmt.Errorf("unknown configuration key %s", key)
 			}
 		}

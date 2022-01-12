@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"net"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -31,8 +32,6 @@ func NewRecordType(id uint16, name string, example interface{}) *RecordType {
 // TODO: Add missing records types once all operations are implemented.
 
 var (
-	// RecordNone is a placeholder for an invalid or empty record.
-	RecordNone = NewRecordType(0x0000, "None", nil)
 	// RecordModel contains the device's manufacturer-provided model name.
 	RecordModel = NewRecordType(0x0001, "Model", "GS308E")
 	// RecordName contains the device's user-defined name.
@@ -49,34 +48,39 @@ var (
 	RecordDHCP = NewRecordType(0x000B, "DHCP", false)
 	// RecordFirmware contains the device's firmware version.
 	RecordFirmware = NewRecordType(0x000D, "Firmware", "1.00.10")
+	// PasswordEncryption specifies whether the password is transmitted encrypted or plain-text.
+	RecordPasswordEncryption = NewRecordType(0x0014, "PasswordEncryption", false)
+	// RecordPortCount contains the number of ports on the device.
+	RecordPortCount = NewRecordType(0x6000, "PortCount", uint8(0))
 	// RecordEndOfMessage special record type that identifies the end
 	// of the message. Combined with a length of 0, this forms the 4
 	// magic bytes that mark the end of the message (0xFFFF0000).
 	RecordEndOfMessage = NewRecordType(0xFFFF, "EndOfMessage", nil)
 )
 
-// RecordTypeIDs maps the ID of a record to a record type.
-var RecordTypeIDs = map[RecordTypeID]*RecordType{
-	RecordNone.ID:         RecordNone,
-	RecordModel.ID:        RecordModel,
-	RecordName.ID:         RecordName,
-	RecordMAC.ID:          RecordMAC,
-	RecordIP.ID:           RecordIP,
-	RecordNetmask.ID:      RecordNetmask,
-	RecordGateway.ID:      RecordGateway,
-	RecordDHCP.ID:         RecordDHCP,
-	RecordFirmware.ID:     RecordFirmware,
-	RecordEndOfMessage.ID: RecordEndOfMessage,
+// RecordTypeByID maps the ID of a record to a record type.
+var RecordTypeByID = map[RecordTypeID]*RecordType{
+	RecordModel.ID:              RecordModel,
+	RecordName.ID:               RecordName,
+	RecordMAC.ID:                RecordMAC,
+	RecordIP.ID:                 RecordIP,
+	RecordNetmask.ID:            RecordNetmask,
+	RecordGateway.ID:            RecordGateway,
+	RecordDHCP.ID:               RecordDHCP,
+	RecordFirmware.ID:           RecordFirmware,
+	RecordPasswordEncryption.ID: RecordPasswordEncryption,
+	RecordPortCount.ID:          RecordPortCount,
+	RecordEndOfMessage.ID:       RecordEndOfMessage,
 }
 
 // RecordTypeNames maps the name of a record to a record type.
-var RecordTypeNames = indexRecordTypeNames()
+var RecordTypeByName = indexRecordTypeNames()
 
 // indexRecordTypeNames builds an index of the record names.
 func indexRecordTypeNames() map[string]*RecordType {
-	recordNames := make(map[string]*RecordType, len(RecordTypeIDs))
+	recordNames := make(map[string]*RecordType, len(RecordTypeByID))
 
-	for _, record := range RecordTypeIDs {
+	for _, record := range RecordTypeByID {
 		// Exclude the None and the EndOfMessage record types.
 		if record.Example != nil {
 			recordNames[strings.ToLower(record.Name)] = record
@@ -109,9 +113,37 @@ const (
 // possible to encode variable length values
 // in a binary format.
 type Record struct {
-	Type  RecordTypeID
+	ID    RecordTypeID
 	Len   uint16
 	Value []uint8
+}
+
+// Type returns the type of the record.
+func (r Record) Type() *RecordType {
+	return RecordTypeByID[r.ID]
+}
+
+// Reflect returns a reflect.Value of the record's value.
+func (r Record) Reflect() reflect.Value {
+	rt := r.Type()
+	if rt == nil {
+		return reflect.ValueOf((*byte)(nil))
+	}
+
+	switch rt.Example.(type) {
+	case string:
+		return reflect.ValueOf(string(r.Value))
+	case uint8:
+		return reflect.ValueOf(uint8(r.Value[0]))
+	case bool:
+		return reflect.ValueOf(bool(r.Value[0] == 1))
+	case net.HardwareAddr:
+		return reflect.ValueOf(net.HardwareAddr(r.Value))
+	case net.IP:
+		return reflect.ValueOf(net.IP(r.Value))
+	default:
+		return reflect.ValueOf((*byte)(nil))
+	}
 }
 
 // Header defines the binary encoding of the
@@ -179,8 +211,8 @@ func (m *Message) UnmarshalBinary(data []byte) error {
 	// Decode message records.
 	for r.Len() > 0 {
 		var record Record
-		// Decode record type.
-		if err := binary.Read(r, binary.BigEndian, &record.Type); err != nil {
+		// Decode record type identifier.
+		if err := binary.Read(r, binary.BigEndian, &record.ID); err != nil {
 			return err
 		}
 		// Decode record length.
@@ -189,7 +221,7 @@ func (m *Message) UnmarshalBinary(data []byte) error {
 		}
 
 		// Check if magic bytes for end of message are reached.
-		if record.Type == RecordEndOfMessage.ID {
+		if record.ID == RecordEndOfMessage.ID {
 			// Check if the message is valid.
 			if record.Len != 0 {
 				return errors.New("invalid end of message")
@@ -221,8 +253,8 @@ func (m *Message) MarshalBinary() ([]byte, error) {
 
 	// Encode message records.
 	for _, record := range m.Records {
-		// Encode record type.
-		if err := binary.Write(w, binary.BigEndian, record.Type); err != nil {
+		// Encode record type identifier.
+		if err := binary.Write(w, binary.BigEndian, record.ID); err != nil {
 			return nil, err
 		}
 
@@ -261,14 +293,14 @@ func NewDiscoveryMessage() *Message {
 	// common ones and therefore NOT the same as used by the
 	// original tool provided by the manufacturer.
 	scanRecords := []Record{
-		{Type: RecordModel.ID},
-		{Type: RecordName.ID},
-		{Type: RecordMAC.ID},
-		{Type: RecordIP.ID},
-		{Type: RecordNetmask.ID},
-		{Type: RecordGateway.ID},
-		{Type: RecordDHCP.ID},
-		{Type: RecordFirmware.ID},
+		{ID: RecordModel.ID},
+		{ID: RecordName.ID},
+		{ID: RecordMAC.ID},
+		{ID: RecordIP.ID},
+		{ID: RecordNetmask.ID},
+		{ID: RecordGateway.ID},
+		{ID: RecordDHCP.ID},
+		{ID: RecordFirmware.ID},
 	}
 	msg.Records = append(msg.Records, scanRecords...)
 

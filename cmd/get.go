@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"reflect"
 	"strings"
 	"text/tabwriter"
 
@@ -37,7 +36,7 @@ to see a list of available keys.`,
 			keys[i] = strings.ToLower(key)
 
 			// Check if key is valid.
-			if nsdp.RecordTypeNames[key] == nil {
+			if nsdp.RecordTypeByName[key] == nil {
 				return fmt.Errorf(`unknown configuration key "%s"`, key)
 			}
 		}
@@ -53,7 +52,7 @@ to see a list of available keys.`,
 			// Add request records.
 			for _, key := range keys {
 				request.Records = append(request.Records, nsdp.Record{
-					Type: nsdp.RecordTypeNames[key].ID,
+					ID: nsdp.RecordTypeByName[key].ID,
 				})
 			}
 
@@ -84,33 +83,15 @@ to see a list of available keys.`,
 
 		// Fetch table columns from first message.
 		for _, record := range messages[0].Records {
-			fmt.Fprintf(w, "%s\t", nsdp.RecordTypeIDs[record.Type].Name)
+			fmt.Fprintf(w, "%s\t", nsdp.RecordTypeByID[record.ID].Name)
 		}
 		fmt.Fprintln(w)
 
 		// Print requested columns.
 		for _, message := range messages {
 			for _, record := range message.Records {
-				// Get corresponding record type.
-				recordType := nsdp.RecordTypeIDs[record.Type]
-				if recordType == nil {
-					fmt.Fprint(w, "\t")
-					continue
-				}
-
 				// Parse values into their according types.
-				var value reflect.Value
-				switch recordType.Example.(type) {
-				case string:
-					value = reflect.ValueOf(string(record.Value))
-				case bool:
-					value = reflect.ValueOf(record.Value[0] == 1)
-				case net.HardwareAddr:
-					value = reflect.ValueOf(net.HardwareAddr(record.Value))
-				case net.IP:
-					value = reflect.ValueOf(net.IP(record.Value))
-				}
-
+				value := record.Reflect()
 				fmt.Fprintf(w, "%v\t", value)
 			}
 

@@ -18,20 +18,21 @@ var keysCmd = &cobra.Command{
 available configuration keys.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Sort keys by RecordTypeID to get consistent results.
-		keyIDs := make([]int, 0, len(nsdp.RecordTypeNames))
-		for _, recordType := range nsdp.RecordTypeNames {
-			keyIDs = append(keyIDs, int(recordType.ID))
+		ids := make([]int, 0, len(nsdp.RecordTypeByName))
+		for _, rt := range nsdp.RecordTypeByName {
+			ids = append(ids, int(rt.ID))
 		}
-		sort.Ints(keyIDs)
+		sort.Ints(ids)
 
 		// Create table with tabwriter.
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.TabIndent)
 		fmt.Fprintf(w, "ID\tName\tExample\n")
 
 		// Print a list of all available configuration keys.
-		for _, keyID := range keyIDs {
-			recordType := nsdp.RecordTypeIDs[nsdp.RecordTypeID(keyID)]
-			fmt.Fprintf(w, "0x%04X\t%s\t%v\n", recordType.ID, strings.ToLower(recordType.Name), recordType.Example)
+		for _, id := range ids {
+			// Fetch record type by ID.
+			rt := nsdp.RecordTypeByID[nsdp.RecordTypeID(id)]
+			fmt.Fprintf(w, "0x%04X\t%s\t%v\n", rt.ID, strings.ToLower(rt.Name), rt.Example)
 		}
 
 		return w.Flush()
