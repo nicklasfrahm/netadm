@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"reflect"
 	"strings"
 	"text/tabwriter"
 
@@ -42,7 +43,7 @@ to see a list of available keys.`,
 		}
 
 		// Create slice to hold results.
-		messages := make([]nsdp.Message, 0)
+		devices := make([]nsdp.Device, 0)
 
 		// Retry operation if retries is greater than 0.
 		for i := uint(0); i <= retries; i++ {
@@ -61,7 +62,7 @@ to see a list of available keys.`,
 			defer cancel()
 
 			// Run scan for devices.
-			msgs, err := nsdp.RequestMessages(interfaceName, request,
+			devs, err := nsdp.RequestDevices(interfaceName, request,
 				nsdp.WithContext(ctx),
 				nsdp.WithMAC(&mac),
 			)
@@ -70,29 +71,39 @@ to see a list of available keys.`,
 			}
 
 			// Deduplicate results from all attempts.
-			messages = nsdp.DeduplicateMessages(messages, msgs)
+			devices = nsdp.DeduplicateDevices(devices, devs)
 		}
 
 		// Check if any devices were found.
-		if len(messages) == 0 {
+		if len(devices) == 0 {
 			return errors.New("no switches found")
 		}
 
 		// Create table with tabwriter.
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.TabIndent)
 
-		// Fetch table columns from first message.
-		for _, record := range messages[0].Records {
-			fmt.Fprintf(w, "%s\t", nsdp.RecordTypeByID[record.ID].Name)
+		// Fetch table columns from desired keys.
+		for _, key := range keys {
+			// Print column header.
+			rt := nsdp.RecordTypeByName[key]
+			fmt.Fprintf(w, "%s\t", strings.ToUpper(rt.Name))
 		}
 		fmt.Fprintln(w)
 
 		// Print requested columns.
-		for _, message := range messages {
-			for _, record := range message.Records {
-				// Parse values into their according types.
-				value := record.Reflect()
-				fmt.Fprintf(w, "%v\t", value)
+		for _, device := range devices {
+			// Print the desired columns.
+			for _, key := range keys {
+				// Fetch field from device.
+				name := nsdp.RecordTypeByName[key].Name
+				field := reflect.ValueOf(device).FieldByName(name)
+				if field.IsValid() {
+					// Print field value.
+					fmt.Fprintf(w, "%v\t", field.Interface())
+				} else {
+					// Print empty field.
+					fmt.Fprintf(w, "n/a\t")
+				}
 			}
 
 			fmt.Fprintln(w)

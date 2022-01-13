@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strings"
 	"text/tabwriter"
 
+	"github.com/nicklasfrahm/nsdp/pkg/nsdp"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +44,7 @@ command line flag.`,
 
 		// Create table with tabwriter.
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.TabIndent)
-		fmt.Fprintf(w, "Interface\tMAC Address\tIP Addresses\n")
+		fmt.Fprintf(w, "INTERFACE\tMAC ADDRESS\tIP ADDRESS\n")
 
 		// Print all interfaces.
 		for _, iface := range interfaces {
@@ -61,21 +61,13 @@ command line flag.`,
 				continue
 			}
 
-			// Skip if no addresses are assigned
-			// to the interface.
-			addrs, err := iface.Addrs()
-			if err != nil {
-				return err
-			}
-			if len(addrs) == 0 {
+			// Skip if interface has no valid IPv4.
+			ip, err := nsdp.GetInterfaceIPv4(&iface)
+			if err != nil || ip == nil {
 				continue
 			}
-			addresses := make([]string, len(addrs))
-			for i, addr := range addrs {
-				addresses[i] = addr.String()
-			}
 
-			fmt.Fprintf(w, "%s\t%s\t%s\n", iface.Name, iface.HardwareAddr.String(), strings.Join(addresses, ","))
+			fmt.Fprintf(w, "%s\t%s\t%s\n", iface.Name, iface.HardwareAddr.String(), ip.String())
 		}
 
 		if err := w.Flush(); err != nil {

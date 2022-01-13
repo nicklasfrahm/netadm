@@ -10,6 +10,34 @@ import (
 	"time"
 )
 
+// LinkStatus defines the speed of a network link.
+type LinkStatus uint8
+
+const (
+	// LinkDown marks a link to be down.
+	LinkDown LinkStatus = iota
+	// LinkSpeed10MbitHalfDuplex is the speed of a 10Mbit Ethernet link in half-duplex mode.
+	LinkSpeed10MbitHalfDuplex
+	// LinkSpeed10Mbit is the speed of a 10Mbit Ethernet link in full-duplex mode.
+	LinkSpeed10Mbit
+	// LinkSpeed100MbitHalfDuplex is the speed of a 100Mbit Ethernet link in half-duplex mode.
+	LinkSpeed100MbitHalfDuplex
+	// LinkSpeed100Mbit is the speed of a 100Mbit Ethernet link in full-duplex mode.
+	LinkSpeed100Mbit
+	// LinkSpeed1Gbit is the speed of a 1Gbit Ethernet link in full-duplex mode.
+	LinkSpeed1Gbit
+	// LinkSpeed10Gbit is the speed of a 10Gbit Ethernet link in full-duplex mode.
+	LinkSpeed10Gbit
+)
+
+// PortSpeed describes the speed of a port.
+type PortSpeed struct {
+	ID    uint8
+	Speed LinkStatus
+}
+
+// TODO: Add String() method to show nicer output.
+
 // RecordTypeID is the ID of a RecordType.
 type RecordTypeID uint16
 
@@ -18,6 +46,7 @@ type RecordType struct {
 	ID      RecordTypeID
 	Name    string
 	Example interface{}
+	Slice   bool
 }
 
 // NewRecordType creates a new record type.
@@ -27,6 +56,12 @@ func NewRecordType(id uint16, name string, example interface{}) *RecordType {
 		Name:    name,
 		Example: example,
 	}
+}
+
+// SetSlice sets the slice flag on the record.
+func (r *RecordType) SetSlice(slice bool) *RecordType {
+	r.Slice = slice
+	return r
 }
 
 // TODO: Add missing records types once all operations are implemented.
@@ -50,8 +85,10 @@ var (
 	RecordFirmware = NewRecordType(0x000D, "Firmware", "1.00.10")
 	// PasswordEncryption specifies whether the password is transmitted encrypted or plain-text.
 	RecordPasswordEncryption = NewRecordType(0x0014, "PasswordEncryption", false)
+	// RecordPortSpeeds contains the link status and the speed of the port.
+	RecordPortSpeeds = NewRecordType(0x0C00, "PortSpeeds", []PortSpeed{{1, LinkSpeed1Gbit}, {2, LinkDown}}).SetSlice(true)
 	// RecordPortCount contains the number of ports on the device.
-	RecordPortCount = NewRecordType(0x6000, "PortCount", uint8(0))
+	RecordPortCount = NewRecordType(0x6000, "PortCount", uint8(5))
 	// RecordEndOfMessage special record type that identifies the end
 	// of the message. Combined with a length of 0, this forms the 4
 	// magic bytes that mark the end of the message (0xFFFF0000).
@@ -69,6 +106,7 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordDHCP.ID:               RecordDHCP,
 	RecordFirmware.ID:           RecordFirmware,
 	RecordPasswordEncryption.ID: RecordPasswordEncryption,
+	RecordPortSpeeds.ID:         RecordPortSpeeds,
 	RecordPortCount.ID:          RecordPortCount,
 	RecordEndOfMessage.ID:       RecordEndOfMessage,
 }
@@ -145,8 +183,13 @@ func (r Record) Reflect() reflect.Value {
 		return reflect.ValueOf(net.HardwareAddr(r.Value))
 	case net.IP:
 		return reflect.ValueOf(net.IP(r.Value))
+	case PortSpeed:
+		return reflect.ValueOf(PortSpeed{
+			ID:    r.Value[0],
+			Speed: LinkStatus(r.Value[1]),
+		})
 	default:
-		return reflect.ValueOf((*byte)(nil))
+		return reflect.ValueOf(r.Value)
 	}
 }
 

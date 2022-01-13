@@ -18,6 +18,7 @@ type Device struct {
 	Firmware           string
 	PasswordEncryption bool
 	PortCount          uint8
+	PortSpeeds         []PortSpeed
 }
 
 // UnmarshalMessage decodes a message into a Device.
@@ -35,7 +36,17 @@ func (d *Device) UnmarshalMessage(msg *Message) error {
 		// Set the value of the field.
 		field := reflect.ValueOf(d).Elem().FieldByName(rt.Name)
 		if field.IsValid() {
-			field.Set(value)
+			// This is a minor hack as using reflect.Kind() == reflect.Slice
+			// will give false positives for MAC and IP addresses.
+			if rt.Slice {
+				// Initialize slice if it is nil.
+				if field.IsZero() {
+					field.Set(reflect.MakeSlice(field.Type(), 0, 0))
+				}
+				field.Set(reflect.Append(field, value))
+			} else {
+				field.Set(value)
+			}
 		}
 	}
 

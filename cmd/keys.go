@@ -26,7 +26,7 @@ available configuration keys.`,
 
 		// Create table with tabwriter.
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.TabIndent)
-		fmt.Fprintf(w, "ID\tName\tExample\n")
+		fmt.Fprintf(w, "ID\tNAME\tEXAMPLE\n")
 
 		// Print a list of all available configuration keys.
 		for _, id := range ids {
