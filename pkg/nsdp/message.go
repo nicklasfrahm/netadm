@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"net"
 	"reflect"
 	"strings"
@@ -45,6 +44,12 @@ type PortMetric struct {
 	BytesReceived   uint64
 	BytesSent       uint64
 	ErrorsPacketCRC uint64
+}
+
+// PortMirroring describes the port mirroring configuration of all ports.
+type PortMirroring struct {
+	Destination uint8
+	Sources     []uint8
 }
 
 // RecordTypeID is the ID of a RecordType.
@@ -97,7 +102,9 @@ var (
 	// RecordPortSpeeds contains the link status and the speed of a port.
 	RecordPortSpeeds = NewRecordType(0x0C00, "PortSpeeds", []PortSpeed{{1, LinkSpeed1Gbit}, {2, LinkDown}}).SetSlice(true)
 	// RecordPortMetrics contains network traffic metrics of a port.
-	RecordPortMetrics = NewRecordType(0x1000, "PortMetrics", []PortMetric{}).SetSlice(true)
+	RecordPortMetrics = NewRecordType(0x1000, "PortMetrics", []PortMetric{{1, 64, 32, 0}}).SetSlice(true)
+	// RecordPortMirroring contains the mirroring configuration of all ports.
+	RecordPortMirroring = NewRecordType(0x5c00, "PortMirroring", PortMirroring{1, []uint8{1, 2}})
 	// RecordPortCount contains the number of ports on the device.
 	RecordPortCount = NewRecordType(0x6000, "PortCount", uint8(5))
 	// RecordEndOfMessage special record type that identifies the end
@@ -119,6 +126,7 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordPasswordEncryption.ID: RecordPasswordEncryption,
 	RecordPortSpeeds.ID:         RecordPortSpeeds,
 	RecordPortMetrics.ID:        RecordPortMetrics,
+	RecordPortMirroring.ID:      RecordPortMirroring,
 	RecordPortCount.ID:          RecordPortCount,
 	RecordEndOfMessage.ID:       RecordEndOfMessage,
 }
@@ -207,8 +215,29 @@ func (r Record) Reflect() reflect.Value {
 			BytesSent:       binary.BigEndian.Uint64(r.Value[9:17]),
 			ErrorsPacketCRC: binary.BigEndian.Uint64(r.Value[41:49]),
 		})
+	case PortMirroring:
+		// I can for sure make out that uint8[0] is the destination
+		// port. The other bits seem to be a bitmask. On my 8-port
+		// switch, GS308E, uint8[2] seems to map to port 1 through 8,
+		// where the most significant bit (7) corresponds to port 1
+		// and the least significant bit (0) corresponds to port 8.
+		// My educated guess is therefore that uint8[2] maps to port
+		// 9 through 16, where the most significant bit (7) corresponds
+		// to port 9 and the least significant bit (0) corresponds to
+		// port 16. Below you can find a few examples that I configured
+		// via the web UI to figure out the bitmask.
+		//
+		// Port mirroring disabled: [0, 0, 0]
+		// Mirror ports 5 to port 6: [6, 0, 8]
+		// Mirror ports 3 and 7 to port 4: [4, 0, 34]
+		// Mirror ports 1 and 8 to port 2: [2, 0, 129]
+		pm := PortMirroring{
+			Destination: r.Value[0],
+			Sources:     make([]uint8, 0),
+		}
+		// TODO: Decode bitmask.
+		return reflect.ValueOf(pm)
 	default:
-		fmt.Println(r.Value)
 		return reflect.ValueOf(r.Value)
 	}
 }
