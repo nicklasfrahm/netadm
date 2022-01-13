@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"net"
 	"reflect"
 	"strings"
@@ -31,12 +32,20 @@ const (
 )
 
 // PortSpeed describes the speed of a port.
+// TODO: Add String() method to show nicer output.
 type PortSpeed struct {
 	ID    uint8
 	Speed LinkStatus
 }
 
-// TODO: Add String() method to show nicer output.
+// PortMetric contains network traffic metrics of a port.
+// TODO: Find out what the other metrics are.
+type PortMetric struct {
+	ID              uint8
+	BytesReceived   uint64
+	BytesSent       uint64
+	ErrorsPacketCRC uint64
+}
 
 // RecordTypeID is the ID of a RecordType.
 type RecordTypeID uint16
@@ -85,8 +94,10 @@ var (
 	RecordFirmware = NewRecordType(0x000D, "Firmware", "1.00.10")
 	// PasswordEncryption specifies whether the password is transmitted encrypted or plain-text.
 	RecordPasswordEncryption = NewRecordType(0x0014, "PasswordEncryption", false)
-	// RecordPortSpeeds contains the link status and the speed of the port.
+	// RecordPortSpeeds contains the link status and the speed of a port.
 	RecordPortSpeeds = NewRecordType(0x0C00, "PortSpeeds", []PortSpeed{{1, LinkSpeed1Gbit}, {2, LinkDown}}).SetSlice(true)
+	// RecordPortMetrics contains network traffic metrics of a port.
+	RecordPortMetrics = NewRecordType(0x1000, "PortMetrics", []PortMetric{}).SetSlice(true)
 	// RecordPortCount contains the number of ports on the device.
 	RecordPortCount = NewRecordType(0x6000, "PortCount", uint8(5))
 	// RecordEndOfMessage special record type that identifies the end
@@ -107,6 +118,7 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordFirmware.ID:           RecordFirmware,
 	RecordPasswordEncryption.ID: RecordPasswordEncryption,
 	RecordPortSpeeds.ID:         RecordPortSpeeds,
+	RecordPortMetrics.ID:        RecordPortMetrics,
 	RecordPortCount.ID:          RecordPortCount,
 	RecordEndOfMessage.ID:       RecordEndOfMessage,
 }
@@ -183,12 +195,20 @@ func (r Record) Reflect() reflect.Value {
 		return reflect.ValueOf(net.HardwareAddr(r.Value))
 	case net.IP:
 		return reflect.ValueOf(net.IP(r.Value))
-	case PortSpeed:
+	case []PortSpeed:
 		return reflect.ValueOf(PortSpeed{
 			ID:    r.Value[0],
 			Speed: LinkStatus(r.Value[1]),
 		})
+	case []PortMetric:
+		return reflect.ValueOf(PortMetric{
+			ID:              r.Value[0],
+			BytesReceived:   binary.BigEndian.Uint64(r.Value[1:9]),
+			BytesSent:       binary.BigEndian.Uint64(r.Value[9:17]),
+			ErrorsPacketCRC: binary.BigEndian.Uint64(r.Value[41:49]),
+		})
 	default:
+		fmt.Println(r.Value)
 		return reflect.ValueOf(r.Value)
 	}
 }

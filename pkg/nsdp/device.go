@@ -17,8 +17,9 @@ type Device struct {
 	DHCP               bool
 	Firmware           string
 	PasswordEncryption bool
-	PortCount          uint8
 	PortSpeeds         []PortSpeed
+	PortMetrics        []PortMetric
+	PortCount          uint8
 }
 
 // UnmarshalMessage decodes a message into a Device.
