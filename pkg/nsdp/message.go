@@ -227,16 +227,42 @@ func (r Record) Reflect() reflect.Value {
 		// port 16. Below you can find a few examples that I configured
 		// via the web UI to figure out the bitmask.
 		//
-		// Port mirroring disabled: [0, 0, 0]
-		// Mirror ports 5 to port 6: [6, 0, 8]
-		// Mirror ports 3 and 7 to port 4: [4, 0, 34]
-		// Mirror ports 1 and 8 to port 2: [2, 0, 129]
-		pm := PortMirroring{
+		// 1. Port mirroring disabled: [0, 0, 0]
+		// 2. Mirror ports 5 to port 6: [6, 0, 8]
+		// 3. Mirror ports 3 and 7 to port 4: [4, 0, 34]
+		// 4. Mirror ports 1 and 8 to port 2: [2, 0, 129]
+		portMirroring := PortMirroring{
 			Destination: r.Value[0],
 			Sources:     make([]uint8, 0),
 		}
-		// TODO: Decode bitmask.
-		return reflect.ValueOf(pm)
+		// As previously outlined, each byte describes
+		// a port group of 8 switch ports as each byte
+		// has exactly 8 bits.
+		portGroups := r.Value[1:]
+		portGroupSize := 8
+		portGroupCount := len(portGroups)
+		for pg, portGroup := range portGroups {
+			// The port groups are in reverse order, such that
+			// port group containing the highest port number is
+			// the mapped to the first byte. Thus, we find the
+			// port offset by subtracting the current port group
+			// from the total number of port groups. We also need
+			// to subtract 1 because the last port group byte has
+			// no offset and is therefore 0-indexed.
+			portOffset := (portGroupCount - pg - 1) * 8
+			for bit := portGroupSize - 1; bit >= 0; bit-- {
+				if portGroup&(1<<bit) != 0 {
+					// As bits are numbered starting from the least
+					// significant bit and our ports are mapped in
+					// reverse order, we need to subtract the bit
+					// number port group size. Here, we do not need
+					// to subtract 1 because the ports are 1-indexed.
+					port := portOffset + (portGroupSize - bit)
+					portMirroring.Sources = append(portMirroring.Sources, uint8(port))
+				}
+			}
+		}
+		return reflect.ValueOf(portMirroring)
 	default:
 		return reflect.ValueOf(r.Value)
 	}

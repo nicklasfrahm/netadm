@@ -19,6 +19,7 @@ type Device struct {
 	PasswordEncryption bool
 	PortSpeeds         []PortSpeed
 	PortMetrics        []PortMetric
+	PortMirroring      PortMirroring
 	PortCount          uint8
 }
 
