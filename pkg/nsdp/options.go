@@ -18,13 +18,34 @@ const (
 var (
 	// SelectorAll is a selector that will cause
 	// all devices to respond to the mesage.
-	SelectorAll = &Selector{MAC: &net.HardwareAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}
+	SelectorAll = &Selector{MAC: &net.HardwareAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, IP: &net.IPv4bcast}
 )
 
 // Selector is a type that allows it to
 // target specific devices with a message.
 type Selector struct {
 	MAC *net.HardwareAddr
+	IP  *net.IP
+}
+
+// NewSelector returns a new Selector matching all devices.
+func NewSelector() *Selector {
+	return &Selector{
+		MAC: &net.HardwareAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+		IP:  &net.IPv4bcast,
+	}
+}
+
+// SetMAC sets the MAC address of the selector and returns the selector.
+func (s *Selector) SetMAC(mac *net.HardwareAddr) *Selector {
+	s.MAC = mac
+	return s
+}
+
+// SetIP sets the IP address of the selector and returns the selector.
+func (s *Selector) SetIP(ip *net.IP) *Selector {
+	s.IP = ip
+	return s
 }
 
 // Options defines the configuration of an operation of this library.
@@ -67,15 +88,14 @@ func WithContext(ctx context.Context) Option {
 	}
 }
 
-// WithMAC specifies which devices to send
-// the message to.
-func WithMAC(mac *net.HardwareAddr) Option {
+// WithSelector allows to select devices either
+// by their MAC address or by their IP address.
+func WithSelector(selector *Selector) Option {
 	return func(o *Options) error {
-		if mac == nil {
-			return errors.New("MAC must not be empty")
+		if selector == nil {
+			return errors.New("no selector provided")
 		}
-
-		o.Selector = &Selector{MAC: mac}
+		o.Selector = selector
 		return nil
 	}
 }

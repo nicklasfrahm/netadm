@@ -15,7 +15,7 @@ import (
 )
 
 var getCmd = &cobra.Command{
-	Use:   "get <mac> [key ...]",
+	Use:   "get <device> [key ...]",
 	Short: "Read configuration keys",
 	Long: `A command that allows you to read the
 list of specified configuration keys.
@@ -24,12 +24,22 @@ You may run the "keys" subcommand
 to see a list of available keys.`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Check if the MAC address is valid.
-		mac, err := net.ParseMAC(args[0])
-		if err != nil {
-			return err
+		selector := nsdp.NewSelector()
+		// Allow usage of keyword "all" to select all devices.
+		if args[0] != "all" {
+			// Check if the device is identified via its IP address.
+			ip := net.ParseIP(args[0])
+			if ip == nil {
+				// Fall back to MAC address device identification.
+				mac, err := net.ParseMAC(args[0])
+				if err != nil {
+					return errors.New("device identifier must be a MAC address or an IP address")
+				}
+				selector.SetMAC(&mac)
+			} else {
+				selector.SetIP(&ip)
+			}
 		}
-
 		// Check if all keys are valid.
 		keys := args[1:]
 		for i, key := range keys {
@@ -64,7 +74,7 @@ to see a list of available keys.`,
 			// Run scan for devices.
 			devs, err := nsdp.RequestDevices(interfaceName, request,
 				nsdp.WithContext(ctx),
-				nsdp.WithMAC(&mac),
+				nsdp.WithSelector(selector),
 			)
 			if err != nil {
 				return err

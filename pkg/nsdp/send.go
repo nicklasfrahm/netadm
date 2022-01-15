@@ -8,7 +8,10 @@ import (
 )
 
 // Send is a low-level API that allows it to send and receive messages directly.
-func Send(ctx context.Context, iface *net.Interface, request *Message) ([]Message, error) {
+// It is recommended to set an explicit destination IP as otherwise the message
+// will be sent to the global broadcast address, which is often filtered out by
+// routers.
+func Send(ctx context.Context, iface *net.Interface, dst *net.IP, request *Message) ([]Message, error) {
 	// Check if the provided interface has a valid configuration.
 	ip, err := GetInterfaceIPv4(iface)
 	if err != nil {
@@ -72,6 +75,9 @@ func Send(ctx context.Context, iface *net.Interface, request *Message) ([]Messag
 	deviceAddr := net.UDPAddr{
 		IP:   net.IPv4bcast,
 		Port: ServerPort,
+	}
+	if dst != nil {
+		deviceAddr.IP = *dst
 	}
 	if _, err := socket.WriteToUDP(payload, &deviceAddr); err != nil {
 		return nil, err

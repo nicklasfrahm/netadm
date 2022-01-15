@@ -25,8 +25,7 @@ func RequestMessages(ifaceName string, request *Message, options ...Option) ([]M
 	}
 
 	// Send message to broadcast address.
-	// TODO: Can we do this also via unicast?
-	responses, err := Send(opts.Context, iface, request)
+	responses, err := Send(opts.Context, iface, opts.Selector.IP, request)
 	if err != nil {
 		return nil, err
 	}
