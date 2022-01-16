@@ -52,6 +52,9 @@ type PortMirroring struct {
 	Sources     []uint8
 }
 
+// CableTestResult contains the results of a cable test.
+type CableTestResult []uint8
+
 // RecordTypeID is the ID of a RecordType.
 type RecordTypeID uint16
 
@@ -103,8 +106,10 @@ var (
 	RecordPortSpeeds = NewRecordType(0x0C00, "PortSpeeds", []PortSpeed{{1, LinkSpeed1Gbit}, {2, LinkDown}}).SetSlice(true)
 	// RecordPortMetrics contains network traffic metrics of a port.
 	RecordPortMetrics = NewRecordType(0x1000, "PortMetrics", []PortMetric{{1, 64, 32, 0}}).SetSlice(true)
+	// RecordCableTestResult contains the result of a cable test.
+	RecordCableTestResult = NewRecordType(0x1C00, "CableTestResult", CableTestResult{0, 0, 0, 0, 0, 119, 30, 183, 118})
 	// RecordPortMirroring contains the mirroring configuration of all ports.
-	RecordPortMirroring = NewRecordType(0x5c00, "PortMirroring", PortMirroring{1, []uint8{1, 2}})
+	RecordPortMirroring = NewRecordType(0x5C00, "PortMirroring", PortMirroring{1, []uint8{1, 2}})
 	// RecordPortCount contains the number of ports on the device.
 	RecordPortCount = NewRecordType(0x6000, "PortCount", uint8(5))
 	// RecordEndOfMessage special record type that identifies the end
@@ -126,6 +131,7 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordPasswordEncryption.ID: RecordPasswordEncryption,
 	RecordPortSpeeds.ID:         RecordPortSpeeds,
 	RecordPortMetrics.ID:        RecordPortMetrics,
+	RecordCableTestResult.ID:    RecordCableTestResult,
 	RecordPortMirroring.ID:      RecordPortMirroring,
 	RecordPortCount.ID:          RecordPortCount,
 	RecordEndOfMessage.ID:       RecordEndOfMessage,
@@ -227,10 +233,10 @@ func (r Record) Reflect() reflect.Value {
 		// port 16. Below you can find a few examples that I configured
 		// via the web UI to figure out the bitmask.
 		//
-		// 1. Port mirroring disabled: [0, 0, 0]
-		// 2. Mirror ports 5 to port 6: [6, 0, 8]
-		// 3. Mirror ports 3 and 7 to port 4: [4, 0, 34]
-		// 4. Mirror ports 1 and 8 to port 2: [2, 0, 129]
+		//   1. Port mirroring disabled: [0, 0, 0]
+		//   2. Mirror ports 5 to port 6: [6, 0, 8]
+		//   3. Mirror ports 3 and 7 to port 4: [4, 0, 34]
+		//   4. Mirror ports 1 and 8 to port 2: [2, 0, 129]
 		portMirroring := PortMirroring{
 			Destination: r.Value[0],
 			Sources:     make([]uint8, 0),
@@ -264,6 +270,9 @@ func (r Record) Reflect() reflect.Value {
 		}
 		return reflect.ValueOf(portMirroring)
 	default:
+		// TODO: Figure out how to handle the following types:
+		//
+		//   - CableTestResult
 		return reflect.ValueOf(r.Value)
 	}
 }

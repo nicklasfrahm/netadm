@@ -18,6 +18,7 @@ type Device struct {
 	Firmware           string
 	PasswordEncryption bool
 	PortSpeeds         []PortSpeed
+	CableTestResult    CableTestResult
 	PortMetrics        []PortMetric
 	PortMirroring      PortMirroring
 	PortCount          uint8
