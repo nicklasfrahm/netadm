@@ -22,6 +22,8 @@ type Device struct {
 	PortMetrics        []PortMetric
 	PortMirroring      PortMirroring
 	PortCount          uint8
+	LoopDetection      bool
+	MulticastFilter    bool
 }
 
 // UnmarshalMessage decodes a message into a Device.
