@@ -160,7 +160,7 @@ var (
 	// RecordVLANEngine contains the active VLAN engine.
 	RecordVLANEngine = NewRecordType(0x2000, "VLANEngine", VLANEngineDisabled)
 	// RecordPortMirroring contains the mirroring configuration of all ports.
-	RecordPortMirroring = NewRecordType(0x5C00, "PortMirroring", PortMirroring{1, []uint8{1, 2}})
+	RecordPortMirroring = NewRecordType(0x5C00, "PortMirroring", PortMirroring{1, []uint8{2, 3}})
 	// RecordPortCount contains the number of ports on the device.
 	RecordPortCount = NewRecordType(0x6000, "PortCount", uint8(5))
 	// RecordIGMPSnoopingVLAN contains the VLAN ID used for IGMP snooping.
