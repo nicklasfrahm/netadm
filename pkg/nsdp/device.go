@@ -20,7 +20,8 @@ type Device struct {
 	PortSpeeds           []PortSpeed
 	CableTestResult      CableTestResult
 	VLANEngine           VLANEngine
-	VLANs                []VLAN
+	VLANsPort            []VLANPort
+	VLANs802Q            []VLAN802Q
 	PortMetrics          []PortMetric
 	PortMirroring        PortMirroring
 	PortCount            uint8

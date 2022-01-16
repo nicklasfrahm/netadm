@@ -124,15 +124,27 @@ func (p PortMirroring) String() string {
 	return fmt.Sprintf("%d:%s", p.Destination, joinInts(p.Sources, "+"))
 }
 
-// VLAN describes the configuration of a VLAN.
-type VLAN struct {
+// VLANPort describes the configuration of a port-based VLAN.
+type VLANPort struct {
 	ID    uint16
 	Ports []uint8
 }
 
 // String returns the string representation of a VLAN.
-func (v VLAN) String() string {
+func (v VLANPort) String() string {
 	return fmt.Sprintf("%d:%s", v.ID, joinInts(v.Ports, "+"))
+}
+
+// VLAN802Q describes the configuration of an 802.1Q VLAN.
+type VLAN802Q struct {
+	ID       uint16
+	Tagged   []uint8
+	Untagged []uint8
+}
+
+// String returns the string representation of an 802.1Q VLAN.
+func (v VLAN802Q) String() string {
+	return fmt.Sprintf("%dt%su%s", v.ID, joinInts(v.Tagged, "+"), joinInts(v.Untagged, "+"))
 }
 
 // CableTestResult contains the results of a cable test.
@@ -197,8 +209,10 @@ var (
 	RecordCableTestResult = NewRecordType(0x1C00, "CableTestResult", CableTestResult{0, 0, 0, 0, 0, 119, 30, 183, 118})
 	// RecordVLANEngine contains the active VLAN engine.
 	RecordVLANEngine = NewRecordType(0x2000, "VLANEngine", VLANEngineDisabled)
-	// RecordVLAN contains the configuration of a VLAN.
-	RecordVLAN = NewRecordType(0x2400, "VLANs", []VLAN{{1, []uint8{1, 2, 3, 4, 5, 6, 7, 8}}}).SetSlice(true)
+	// RecordVLANPort contains the configuration of a VLAN.
+	RecordVLANPort = NewRecordType(0x2400, "VLANsPort", []VLANPort{{1, []uint8{1, 2, 3, 4, 5, 6, 7, 8}}}).SetSlice(true)
+	// RecordVLAN802Q contains the configuration of a 802.1Q VLAN.
+	RecordVLAN802Q = NewRecordType(0x2800, "VLANs802Q", []VLAN802Q{{1, []uint8{1, 2}, []uint8{3, 4, 5, 6, 7, 8}}}).SetSlice(true)
 	// RecordPortMirroring contains the mirroring configuration of all ports.
 	RecordPortMirroring = NewRecordType(0x5C00, "PortMirroring", PortMirroring{1, []uint8{2, 3}})
 	// RecordPortCount contains the number of ports on the device.
@@ -232,7 +246,8 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordPortMetrics.ID:          RecordPortMetrics,
 	RecordCableTestResult.ID:      RecordCableTestResult,
 	RecordVLANEngine.ID:           RecordVLANEngine,
-	RecordVLAN.ID:                 RecordVLAN,
+	RecordVLANPort.ID:             RecordVLANPort,
+	RecordVLAN802Q.ID:             RecordVLAN802Q,
 	RecordPortMirroring.ID:        RecordPortMirroring,
 	RecordPortCount.ID:            RecordPortCount,
 	RecordIGMPSnoopingVLAN.ID:     RecordIGMPSnoopingVLAN,
@@ -299,8 +314,6 @@ func (r Record) Reflect() reflect.Value {
 		return reflect.ValueOf((*byte)(nil))
 	}
 
-	fmt.Println(r.Value)
-
 	switch rt.Example.(type) {
 	case string:
 		return reflect.ValueOf(string(r.Value))
@@ -352,10 +365,17 @@ func (r Record) Reflect() reflect.Value {
 		return reflect.ValueOf(IGMPSnoopingVLAN(0))
 	case VLANEngine:
 		return reflect.ValueOf(VLANEngine(r.Value[0]))
-	case []VLAN:
-		return reflect.ValueOf(VLAN{
+	case []VLANPort:
+		return reflect.ValueOf(VLANPort{
 			ID:    binary.BigEndian.Uint16(r.Value[0:2]),
 			Ports: decodePortBitmask(r.Value[2:]),
+		})
+	case []VLAN802Q:
+		portGroups := (r.Len - 2) / 2
+		return reflect.ValueOf(VLAN802Q{
+			ID:       binary.BigEndian.Uint16(r.Value[0:2]),
+			Untagged: decodePortBitmask(r.Value[2 : 2+portGroups]),
+			Tagged:   decodePortBitmask(r.Value[2+portGroups:]),
 		})
 	default:
 		// TODO: Parse CableTestResult.
