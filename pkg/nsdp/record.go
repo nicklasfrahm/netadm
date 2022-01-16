@@ -28,6 +28,40 @@ const (
 	LinkSpeed10Gbit
 )
 
+// VLANEngine defines the VLAN engine.
+type VLANEngine uint8
+
+const (
+	// VLANEngineDisabled is the VLAN engine if it is disabled.
+	VLANEngineDisabled VLANEngine = iota
+	// VLANEnginePortBasic is the VLAN engine if it uses basic port-based VLANs.
+	VLANEnginePortBasic
+	// VLANEnginePortAdvanced is the VLAN engine if it uses advanced port-based VLANs.
+	VLANEnginePortAdvanced
+	// VLANEngine802QBasic is the VLAN engine if it uses basic 802.1Q VLANs.
+	VLANEngine802QBasic
+	// VLANEngine802QAdvanced is the VLAN engine if it uses advanced 802.1Q VLANs.
+	VLANEngine802QAdvanced
+)
+
+// String returns the string representation of a VLAN Engine
+func (e VLANEngine) String() string {
+	switch e {
+	case VLANEngineDisabled:
+		return "Disabled"
+	case VLANEnginePortBasic:
+		return "PortBasic"
+	case VLANEnginePortAdvanced:
+		return "PortAdvanced"
+	case VLANEngine802QBasic:
+		return "802.1QBasic"
+	case VLANEngine802QAdvanced:
+		return "802.1QAdvanced"
+	default:
+		return "Unknown"
+	}
+}
+
 // PortSpeed describes the speed of a port.
 // TODO: Add String() method to show nicer output.
 type PortSpeed struct {
@@ -48,6 +82,19 @@ type PortMetric struct {
 type PortMirroring struct {
 	Destination uint8
 	Sources     []uint8
+}
+
+// String returns the string representation of the port mirroring configuration.
+func (p PortMirroring) String() string {
+	if p.Destination == 0 {
+		return "Disabled"
+	}
+
+	sources := make([]string, len(p.Sources))
+	for i, source := range p.Sources {
+		sources[i] = fmt.Sprintf("%d", source)
+	}
+	return fmt.Sprintf("%d:%s", p.Destination, strings.Join(sources, "+"))
 }
 
 // CableTestResult contains the results of a cable test.
@@ -110,6 +157,8 @@ var (
 	RecordPortMetrics = NewRecordType(0x1000, "PortMetrics", []PortMetric{{1, 64, 32, 0}}).SetSlice(true)
 	// RecordCableTestResult contains the result of a cable test.
 	RecordCableTestResult = NewRecordType(0x1C00, "CableTestResult", CableTestResult{0, 0, 0, 0, 0, 119, 30, 183, 118})
+	// RecordVLANEngine contains the active VLAN engine.
+	RecordVLANEngine = NewRecordType(0x2000, "VLANEngine", VLANEngineDisabled)
 	// RecordPortMirroring contains the mirroring configuration of all ports.
 	RecordPortMirroring = NewRecordType(0x5C00, "PortMirroring", PortMirroring{1, []uint8{1, 2}})
 	// RecordPortCount contains the number of ports on the device.
@@ -142,6 +191,7 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordPortSpeeds.ID:           RecordPortSpeeds,
 	RecordPortMetrics.ID:          RecordPortMetrics,
 	RecordCableTestResult.ID:      RecordCableTestResult,
+	RecordVLANEngine.ID:           RecordVLANEngine,
 	RecordPortMirroring.ID:        RecordPortMirroring,
 	RecordPortCount.ID:            RecordPortCount,
 	RecordIGMPSnoopingVLAN.ID:     RecordIGMPSnoopingVLAN,
@@ -286,10 +336,10 @@ func (r Record) Reflect() reflect.Value {
 			return reflect.ValueOf(IGMPSnoopingVLAN(binary.BigEndian.Uint16(r.Value[2:4])))
 		}
 		return reflect.ValueOf(IGMPSnoopingVLAN(0))
+	case VLANEngine:
+		return reflect.ValueOf(VLANEngine(r.Value[0]))
 	default:
-		// TODO: Figure out how to handle the following types:
-		//
-		//   - CableTestResult
+		// TODO: Parse CableTestResult.
 		return reflect.ValueOf(r.Value)
 	}
 }
