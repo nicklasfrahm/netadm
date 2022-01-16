@@ -23,6 +23,7 @@ type Device struct {
 	PortMirroring        PortMirroring
 	PortCount            uint8
 	LoopDetection        bool
+	IGMPSnoopingVLAN     IGMPSnoopingVLAN
 	MulticastFilter      bool
 	IGMPHeaderValidation bool
 }

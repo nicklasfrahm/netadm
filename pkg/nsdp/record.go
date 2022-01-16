@@ -56,6 +56,10 @@ type CableTestResult []uint8
 // RecordTypeID is the ID of a RecordType.
 type RecordTypeID uint16
 
+// IGMPSnoopingVLAN describes the VLAN ID of the IGMP
+// snooping VLAN. If this value is zero, it is disabled.
+type IGMPSnoopingVLAN uint16
+
 // RecordType describes which data a Record contains.
 type RecordType struct {
 	ID      RecordTypeID
@@ -110,6 +114,8 @@ var (
 	RecordPortMirroring = NewRecordType(0x5C00, "PortMirroring", PortMirroring{1, []uint8{1, 2}})
 	// RecordPortCount contains the number of ports on the device.
 	RecordPortCount = NewRecordType(0x6000, "PortCount", uint8(5))
+	// RecordIGMPSnoopingVLAN contains the VLAN ID used for IGMP snooping.
+	RecordIGMPSnoopingVLAN = NewRecordType(0x6800, "IGMPSnoopingVLAN", IGMPSnoopingVLAN(1))
 	// RecordMulticastFilter defines whether the device is configured to filter unknown multicast addresses.
 	RecordMulticastFilter = NewRecordType(0x6C00, "MulticastFilter", false)
 	// RecordIGMPHeaderValidation contains the IGMPv3 header validation status of the device.
@@ -138,6 +144,7 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordCableTestResult.ID:      RecordCableTestResult,
 	RecordPortMirroring.ID:        RecordPortMirroring,
 	RecordPortCount.ID:            RecordPortCount,
+	RecordIGMPSnoopingVLAN.ID:     RecordIGMPSnoopingVLAN,
 	RecordMulticastFilter.ID:      RecordMulticastFilter,
 	RecordIGMPHeaderValidation.ID: RecordIGMPHeaderValidation,
 	RecordLoopDetection.ID:        RecordLoopDetection,
@@ -205,6 +212,7 @@ func (r Record) Reflect() reflect.Value {
 	case string:
 		return reflect.ValueOf(string(r.Value))
 	case uint8:
+		fmt.Println(r.Value)
 		return reflect.ValueOf(uint8(r.Value[0]))
 	case bool:
 		return reflect.ValueOf(bool(r.Value[0] == 1))
@@ -272,11 +280,16 @@ func (r Record) Reflect() reflect.Value {
 			}
 		}
 		return reflect.ValueOf(portMirroring)
+	case IGMPSnoopingVLAN:
+		// If the value is 1, the IGMP snooping is enabled.
+		if binary.BigEndian.Uint16(r.Value[0:2]) == 0x0001 {
+			return reflect.ValueOf(IGMPSnoopingVLAN(binary.BigEndian.Uint16(r.Value[2:4])))
+		}
+		return reflect.ValueOf(IGMPSnoopingVLAN(0))
 	default:
 		// TODO: Figure out how to handle the following types:
 		//
 		//   - CableTestResult
-		fmt.Println(r.Value)
 		return reflect.ValueOf(r.Value)
 	}
 }
