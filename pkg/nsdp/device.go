@@ -8,22 +8,23 @@ import (
 
 // Device represents a switch network device.
 type Device struct {
-	Model              string
-	Name               string
-	MAC                net.HardwareAddr
-	IP                 net.IP
-	Netmask            net.IP
-	Gateway            net.IP
-	DHCP               bool
-	Firmware           string
-	PasswordEncryption bool
-	PortSpeeds         []PortSpeed
-	CableTestResult    CableTestResult
-	PortMetrics        []PortMetric
-	PortMirroring      PortMirroring
-	PortCount          uint8
-	LoopDetection      bool
-	MulticastFilter    bool
+	Model                string
+	Name                 string
+	MAC                  net.HardwareAddr
+	IP                   net.IP
+	Netmask              net.IP
+	Gateway              net.IP
+	DHCP                 bool
+	Firmware             string
+	PasswordEncryption   bool
+	PortSpeeds           []PortSpeed
+	CableTestResult      CableTestResult
+	PortMetrics          []PortMetric
+	PortMirroring        PortMirroring
+	PortCount            uint8
+	LoopDetection        bool
+	MulticastFilter      bool
+	IGMPHeaderValidation bool
 }
 
 // UnmarshalMessage decodes a message into a Device.

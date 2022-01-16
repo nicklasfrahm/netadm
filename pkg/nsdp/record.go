@@ -112,6 +112,8 @@ var (
 	RecordPortCount = NewRecordType(0x6000, "PortCount", uint8(5))
 	// RecordMulticastFilter defines whether the device is configured to filter unknown multicast addresses.
 	RecordMulticastFilter = NewRecordType(0x6C00, "MulticastFilter", false)
+	// RecordIGMPHeaderValidation contains the IGMPv3 header validation status of the device.
+	RecordIGMPHeaderValidation = NewRecordType(0x7000, "IGMPHeaderValidation", false)
 	// RecordLoopDetection contains the loop detection status of the device.
 	RecordLoopDetection = NewRecordType(0x9000, "LoopDetection", false)
 	// RecordEndOfMessage special record type that identifies the end
@@ -122,23 +124,24 @@ var (
 
 // RecordTypeByID maps the ID of a record to a record type.
 var RecordTypeByID = map[RecordTypeID]*RecordType{
-	RecordModel.ID:              RecordModel,
-	RecordName.ID:               RecordName,
-	RecordMAC.ID:                RecordMAC,
-	RecordIP.ID:                 RecordIP,
-	RecordNetmask.ID:            RecordNetmask,
-	RecordGateway.ID:            RecordGateway,
-	RecordDHCP.ID:               RecordDHCP,
-	RecordFirmware.ID:           RecordFirmware,
-	RecordPasswordEncryption.ID: RecordPasswordEncryption,
-	RecordPortSpeeds.ID:         RecordPortSpeeds,
-	RecordPortMetrics.ID:        RecordPortMetrics,
-	RecordCableTestResult.ID:    RecordCableTestResult,
-	RecordPortMirroring.ID:      RecordPortMirroring,
-	RecordPortCount.ID:          RecordPortCount,
-	RecordMulticastFilter.ID:    RecordMulticastFilter,
-	RecordLoopDetection.ID:      RecordLoopDetection,
-	RecordEndOfMessage.ID:       RecordEndOfMessage,
+	RecordModel.ID:                RecordModel,
+	RecordName.ID:                 RecordName,
+	RecordMAC.ID:                  RecordMAC,
+	RecordIP.ID:                   RecordIP,
+	RecordNetmask.ID:              RecordNetmask,
+	RecordGateway.ID:              RecordGateway,
+	RecordDHCP.ID:                 RecordDHCP,
+	RecordFirmware.ID:             RecordFirmware,
+	RecordPasswordEncryption.ID:   RecordPasswordEncryption,
+	RecordPortSpeeds.ID:           RecordPortSpeeds,
+	RecordPortMetrics.ID:          RecordPortMetrics,
+	RecordCableTestResult.ID:      RecordCableTestResult,
+	RecordPortMirroring.ID:        RecordPortMirroring,
+	RecordPortCount.ID:            RecordPortCount,
+	RecordMulticastFilter.ID:      RecordMulticastFilter,
+	RecordIGMPHeaderValidation.ID: RecordIGMPHeaderValidation,
+	RecordLoopDetection.ID:        RecordLoopDetection,
+	RecordEndOfMessage.ID:         RecordEndOfMessage,
 }
 
 // RecordTypeNames maps the name of a record to a record type.
@@ -198,10 +201,6 @@ func (r Record) Reflect() reflect.Value {
 		return reflect.ValueOf((*byte)(nil))
 	}
 
-	// TODO: I have the slight suspicion that
-	// there is a way to get rid of this. To
-	// say it like Eminem, "Something's wrong.
-	// I can feel it."
 	switch rt.Example.(type) {
 	case string:
 		return reflect.ValueOf(string(r.Value))

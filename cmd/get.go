@@ -100,7 +100,9 @@ to see a list of available keys.`,
 		}
 		fmt.Fprintln(w)
 
-		// Print requested columns.
+		// Print requested keys for each device. Note that we
+		// unmarshal the message into a Device because this
+		// allows it to easily group messages of the same type.
 		for _, device := range devices {
 			// Print the desired columns.
 			for _, key := range keys {
@@ -111,7 +113,10 @@ to see a list of available keys.`,
 					// Print field value.
 					fmt.Fprintf(w, "%v\t", field.Interface())
 				} else {
-					// Print empty field.
+					// This happens if the field is a known message
+					// type but not defined inside the Device struct.
+					// Make sure to add the according field to the
+					// Device struct to prevent this.
 					fmt.Fprintf(w, "n/a\t")
 				}
 			}
