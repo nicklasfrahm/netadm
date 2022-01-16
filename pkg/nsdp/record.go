@@ -294,7 +294,6 @@ func (r Record) Reflect() reflect.Value {
 	case string:
 		return reflect.ValueOf(string(r.Value))
 	case uint8:
-		fmt.Println(r.Value)
 		return reflect.ValueOf(uint8(r.Value[0]))
 	case bool:
 		return reflect.ValueOf(bool(r.Value[0] == 1))
