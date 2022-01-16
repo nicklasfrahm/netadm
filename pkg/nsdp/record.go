@@ -121,12 +121,18 @@ func (p PortMirroring) String() string {
 	if p.Destination == 0 {
 		return "Disabled"
 	}
+	return fmt.Sprintf("%d:%s", p.Destination, joinInts(p.Sources, "+"))
+}
 
-	sources := make([]string, len(p.Sources))
-	for i, source := range p.Sources {
-		sources[i] = fmt.Sprintf("%d", source)
-	}
-	return fmt.Sprintf("%d:%s", p.Destination, strings.Join(sources, "+"))
+// VLAN describes the configuration of a VLAN.
+type VLAN struct {
+	ID    uint16
+	Ports []uint8
+}
+
+// String returns the string representation of a VLAN.
+func (v VLAN) String() string {
+	return fmt.Sprintf("%d:%s", v.ID, joinInts(v.Ports, "+"))
 }
 
 // CableTestResult contains the results of a cable test.
@@ -191,6 +197,8 @@ var (
 	RecordCableTestResult = NewRecordType(0x1C00, "CableTestResult", CableTestResult{0, 0, 0, 0, 0, 119, 30, 183, 118})
 	// RecordVLANEngine contains the active VLAN engine.
 	RecordVLANEngine = NewRecordType(0x2000, "VLANEngine", VLANEngineDisabled)
+	// RecordVLAN contains the configuration of a VLAN.
+	RecordVLAN = NewRecordType(0x2400, "VLANs", []VLAN{{1, []uint8{1, 2, 3, 4, 5, 6, 7, 8}}}).SetSlice(true)
 	// RecordPortMirroring contains the mirroring configuration of all ports.
 	RecordPortMirroring = NewRecordType(0x5C00, "PortMirroring", PortMirroring{1, []uint8{2, 3}})
 	// RecordPortCount contains the number of ports on the device.
@@ -224,6 +232,7 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordPortMetrics.ID:          RecordPortMetrics,
 	RecordCableTestResult.ID:      RecordCableTestResult,
 	RecordVLANEngine.ID:           RecordVLANEngine,
+	RecordVLAN.ID:                 RecordVLAN,
 	RecordPortMirroring.ID:        RecordPortMirroring,
 	RecordPortCount.ID:            RecordPortCount,
 	RecordIGMPSnoopingVLAN.ID:     RecordIGMPSnoopingVLAN,
@@ -290,6 +299,8 @@ func (r Record) Reflect() reflect.Value {
 		return reflect.ValueOf((*byte)(nil))
 	}
 
+	fmt.Println(r.Value)
+
 	switch rt.Example.(type) {
 	case string:
 		return reflect.ValueOf(string(r.Value))
@@ -329,38 +340,10 @@ func (r Record) Reflect() reflect.Value {
 		//   2. Mirror ports 5 to port 6: [6, 0, 8]
 		//   3. Mirror ports 3 and 7 to port 4: [4, 0, 34]
 		//   4. Mirror ports 1 and 8 to port 2: [2, 0, 129]
-		portMirroring := PortMirroring{
+		return reflect.ValueOf(PortMirroring{
 			Destination: r.Value[0],
-			Sources:     make([]uint8, 0),
-		}
-		// As previously outlined, each byte describes
-		// a port group of 8 switch ports as each byte
-		// has exactly 8 bits.
-		portGroups := r.Value[1:]
-		portGroupSize := 8
-		portGroupCount := len(portGroups)
-		for pg, portGroup := range portGroups {
-			// The port groups are in reverse order, such that
-			// port group containing the highest port number is
-			// the mapped to the first byte. Thus, we find the
-			// port offset by subtracting the current port group
-			// from the total number of port groups. We also need
-			// to subtract 1 because the last port group byte has
-			// no offset and is therefore 0-indexed.
-			portOffset := (portGroupCount - pg - 1) * 8
-			for bit := portGroupSize - 1; bit >= 0; bit-- {
-				if portGroup&(1<<bit) != 0 {
-					// As bits are numbered starting from the least
-					// significant bit and our ports are mapped in
-					// reverse order, we need to subtract the bit
-					// number port group size. Here, we do not need
-					// to subtract 1 because the ports are 1-indexed.
-					port := portOffset + (portGroupSize - bit)
-					portMirroring.Sources = append(portMirroring.Sources, uint8(port))
-				}
-			}
-		}
-		return reflect.ValueOf(portMirroring)
+			Sources:     decodePortBitmask(r.Value[1:]),
+		})
 	case IGMPSnoopingVLAN:
 		// If the value is 1, the IGMP snooping is enabled.
 		if binary.BigEndian.Uint16(r.Value[0:2]) == 0x0001 {
@@ -369,8 +352,50 @@ func (r Record) Reflect() reflect.Value {
 		return reflect.ValueOf(IGMPSnoopingVLAN(0))
 	case VLANEngine:
 		return reflect.ValueOf(VLANEngine(r.Value[0]))
+	case []VLAN:
+		return reflect.ValueOf(VLAN{
+			ID:    binary.BigEndian.Uint16(r.Value[0:2]),
+			Ports: decodePortBitmask(r.Value[2:]),
+		})
 	default:
 		// TODO: Parse CableTestResult.
 		return reflect.ValueOf(r.Value)
 	}
+}
+
+// decodePortBitmask takes a bitmask and returns a slice of ports.
+func decodePortBitmask(portGroups []uint8) []uint8 {
+	ports := make([]uint8, 0)
+	// As previously outlined, each byte describes
+	// a port group of 8 switch ports as each byte
+	// has 8 bits.
+	portGroupSize := 8
+	portGroupCount := len(portGroups)
+	for pg, portGroup := range portGroups {
+		// The port groups are in reverse order, such that
+		// port group containing the highest port number is
+		// the mapped to the first byte. Thus, we find the
+		// port offset by subtracting the current port group
+		// from the total number of port groups. We also need
+		// to subtract 1 because the last port group byte has
+		// no offset and is therefore 0-indexed.
+		portOffset := (portGroupCount - pg - 1) * 8
+		for bit := portGroupSize - 1; bit >= 0; bit-- {
+			if portGroup&(1<<bit) != 0 {
+				// As bits are numbered starting from the least
+				// significant bit and our ports are mapped in
+				// reverse order, we need to subtract the bit
+				// number port group size. Here, we do not need
+				// to subtract 1 because the ports are 1-indexed.
+				port := portOffset + (portGroupSize - bit)
+				ports = append(ports, uint8(port))
+			}
+		}
+	}
+	return ports
+}
+
+// joinInts converts a slice of integers to a string.
+func joinInts(ints []uint8, delimiter string) string {
+	return strings.Trim(strings.ReplaceAll(fmt.Sprint(ints), " ", delimiter), "[]")
 }

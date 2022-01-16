@@ -20,6 +20,7 @@ type Device struct {
 	PortSpeeds           []PortSpeed
 	CableTestResult      CableTestResult
 	VLANEngine           VLANEngine
+	VLANs                []VLAN
 	PortMetrics          []PortMetric
 	PortMirroring        PortMirroring
 	PortCount            uint8
