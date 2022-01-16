@@ -28,6 +28,28 @@ const (
 	LinkSpeed10Gbit
 )
 
+// String returns the string representation of the link status.
+func (l LinkStatus) String() string {
+	switch l {
+	case LinkDown:
+		return "Down"
+	case LinkSpeed10MbitHalfDuplex:
+		return "10M+HX"
+	case LinkSpeed10Mbit:
+		return "10M"
+	case LinkSpeed100MbitHalfDuplex:
+		return "100M+HX"
+	case LinkSpeed100Mbit:
+		return "100M"
+	case LinkSpeed1Gbit:
+		return "1G"
+	case LinkSpeed10Gbit:
+		return "10G"
+	default:
+		return "Unknown"
+	}
+}
+
 // VLANEngine defines the VLAN engine.
 type VLANEngine uint8
 
@@ -69,6 +91,11 @@ type PortSpeed struct {
 	Speed LinkStatus
 }
 
+// String returns the string representation of the port speed.
+func (p PortSpeed) String() string {
+	return fmt.Sprintf("%d:%s", p.ID, p.Speed.String())
+}
+
 // PortMetric contains network traffic metrics of a port.
 // TODO: Find out what the other metrics are.
 type PortMetric struct {
@@ -76,6 +103,11 @@ type PortMetric struct {
 	BytesReceived   uint64
 	BytesSent       uint64
 	ErrorsPacketCRC uint64
+}
+
+// String returns the string representation of a port metric.
+func (p PortMetric) String() string {
+	return fmt.Sprintf("%d:%d/%d/%d", p.ID, p.BytesReceived, p.BytesSent, p.ErrorsPacketCRC)
 }
 
 // PortMirroring describes the port mirroring configuration of all ports.

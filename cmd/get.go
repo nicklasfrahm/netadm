@@ -111,7 +111,7 @@ to see a list of available keys.`,
 				field := reflect.ValueOf(device).FieldByName(name)
 				if field.IsValid() {
 					// Print field value.
-					fmt.Fprintf(w, "%v\t", field.Interface())
+					fmt.Fprintf(w, "%v\t", field)
 				} else {
 					// This happens if the field is a known message
 					// type but not defined inside the Device struct.
