@@ -23,6 +23,8 @@ type Device struct {
 	VLANsPort            []VLANPort
 	VLANs802Q            []VLAN802Q
 	PVIDs                []PVID
+	QoSEngine            QoSEngine
+	QoSPolicies          []QoSPolicy
 	PortMetrics          []PortMetric
 	PortMirroring        PortMirroring
 	PortCount            uint8

@@ -84,8 +84,59 @@ func (e VLANEngine) String() string {
 	}
 }
 
+// QoSEngine defines the quality of service engine.
+type QoSEngine uint8
+
+const (
+	// QoSPort is a port-based QoS engine.
+	QoSPort QoSEngine = iota + 1
+	// QoSDSCP is a DSCP-based QoS engine.
+	QoSDSCP
+)
+
+// String returns the string representation of a QoS engine.
+func (q QoSEngine) String() string {
+	switch q {
+	case QoSPort:
+		return "Port"
+	case QoSDSCP:
+		return "DSCP"
+	default:
+		return "Unknown"
+	}
+}
+
+// QoSPriority describes a port-based QoS priority.
+type QoSPriority uint8
+
+const (
+	// QoSPriorityHigh assigns traffic the highest priority.
+	QoSPriorityHigh QoSPriority = iota + 1
+	// QoSPriorityMedium assigns traffic an above-normal priority.
+	QoSPriorityMedium
+	// QoSPriorityNormal assigns traffic a normal priority.
+	QoSPriorityNormal
+	// QoSPriorityLow is the lowest priority.
+	QoSPriorityLow
+)
+
+// String returns the string representation of a QoS priority.
+func (p QoSPriority) String() string {
+	switch p {
+	case QoSPriorityHigh:
+		return "High"
+	case QoSPriorityMedium:
+		return "Medium"
+	case QoSPriorityNormal:
+		return "Normal"
+	case QoSPriorityLow:
+		return "Low"
+	default:
+		return "Unknown"
+	}
+}
+
 // PortSpeed describes the speed of a port.
-// TODO: Add String() method to show nicer output.
 type PortSpeed struct {
 	ID    uint8
 	Speed LinkStatus
@@ -158,6 +209,17 @@ func (p PVID) String() string {
 	return fmt.Sprintf("%d:%d", p.ID, p.PVID)
 }
 
+// QoSPolicy describes the QoS policy of a port.
+type QoSPolicy struct {
+	ID       uint8
+	Priority QoSPriority
+}
+
+// String returns the string representation of a QoS policy.
+func (q QoSPolicy) String() string {
+	return fmt.Sprintf("%d:%s", q.ID, q.Priority.String())
+}
+
 // CableTestResult contains the results of a cable test.
 type CableTestResult []uint8
 
@@ -226,6 +288,10 @@ var (
 	RecordVLAN802Q = NewRecordType(0x2800, "VLANs802Q", []VLAN802Q{{1, []uint8{1, 2}, []uint8{3, 4, 5, 6, 7, 8}}}).SetSlice(true)
 	// RecordPVIDs contains the 802.1Q VLAN IDs for each port often also referred to as PVIDs.
 	RecordPVIDs = NewRecordType(0x3000, "PVIDs", []PVID{{1, 2}, {2, 2}, {3, 1}, {4, 1}, {5, 1}, {6, 1}, {7, 1}, {8, 1}}).SetSlice(true)
+	// RecordQoSEngine contains the QoS engine.
+	RecordQoSEngine = NewRecordType(0x3400, "QoSEngine", QoSDSCP)
+	// RecordQoSPolicy contains the QoS policy of a port.
+	RecordQoSPolicy = NewRecordType(0x3800, "QoSPolicies", []QoSPolicy{{1, QoSPriorityNormal}, {2, QoSPriorityHigh}}).SetSlice(true)
 	// RecordPortMirroring contains the mirroring configuration of all ports.
 	RecordPortMirroring = NewRecordType(0x5C00, "PortMirroring", PortMirroring{1, []uint8{2, 3}})
 	// RecordPortCount contains the number of ports on the device.
@@ -262,6 +328,8 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordVLANPort.ID:             RecordVLANPort,
 	RecordVLAN802Q.ID:             RecordVLAN802Q,
 	RecordPVIDs.ID:                RecordPVIDs,
+	RecordQoSEngine.ID:            RecordQoSEngine,
+	RecordQoSPolicy.ID:            RecordQoSPolicy,
 	RecordPortMirroring.ID:        RecordPortMirroring,
 	RecordPortCount.ID:            RecordPortCount,
 	RecordIGMPSnoopingVLAN.ID:     RecordIGMPSnoopingVLAN,
@@ -395,6 +463,13 @@ func (r Record) Reflect() reflect.Value {
 		return reflect.ValueOf(PVID{
 			ID:   r.Value[0],
 			PVID: binary.BigEndian.Uint16(r.Value[1:3]),
+		})
+	case QoSEngine:
+		return reflect.ValueOf(QoSEngine(r.Value[0]))
+	case []QoSPolicy:
+		return reflect.ValueOf(QoSPolicy{
+			ID:       r.Value[0],
+			Priority: QoSPriority(r.Value[1]),
 		})
 	default:
 		// TODO: Parse CableTestResult.
