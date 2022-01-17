@@ -326,6 +326,7 @@ func (r *RecordType) SetSlice(slice bool) *RecordType {
 	return r
 }
 
+// TODO: Define interface for record type that allows encoding and decoding into more semantic structs.
 // TODO: Add missing records types once all operations are implemented.
 
 var (
