@@ -147,6 +147,17 @@ func (v VLAN802Q) String() string {
 	return fmt.Sprintf("%dt%su%s", v.ID, joinInts(v.Tagged, "+"), joinInts(v.Untagged, "+"))
 }
 
+// PVID describes the PVID assignment of a port.
+type PVID struct {
+	ID   uint8
+	PVID uint16
+}
+
+// String returns the string representation of a PVID mapping.
+func (p PVID) String() string {
+	return fmt.Sprintf("%d:%d", p.ID, p.PVID)
+}
+
 // CableTestResult contains the results of a cable test.
 type CableTestResult []uint8
 
@@ -213,6 +224,8 @@ var (
 	RecordVLANPort = NewRecordType(0x2400, "VLANsPort", []VLANPort{{1, []uint8{1, 2, 3, 4, 5, 6, 7, 8}}}).SetSlice(true)
 	// RecordVLAN802Q contains the configuration of a 802.1Q VLAN.
 	RecordVLAN802Q = NewRecordType(0x2800, "VLANs802Q", []VLAN802Q{{1, []uint8{1, 2}, []uint8{3, 4, 5, 6, 7, 8}}}).SetSlice(true)
+	// RecordPVIDs contains the 802.1Q VLAN IDs for each port often also referred to as PVIDs.
+	RecordPVIDs = NewRecordType(0x3000, "PVIDs", []PVID{{1, 2}, {2, 2}, {3, 1}, {4, 1}, {5, 1}, {6, 1}, {7, 1}, {8, 1}}).SetSlice(true)
 	// RecordPortMirroring contains the mirroring configuration of all ports.
 	RecordPortMirroring = NewRecordType(0x5C00, "PortMirroring", PortMirroring{1, []uint8{2, 3}})
 	// RecordPortCount contains the number of ports on the device.
@@ -248,6 +261,7 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordVLANEngine.ID:           RecordVLANEngine,
 	RecordVLANPort.ID:             RecordVLANPort,
 	RecordVLAN802Q.ID:             RecordVLAN802Q,
+	RecordPVIDs.ID:                RecordPVIDs,
 	RecordPortMirroring.ID:        RecordPortMirroring,
 	RecordPortCount.ID:            RecordPortCount,
 	RecordIGMPSnoopingVLAN.ID:     RecordIGMPSnoopingVLAN,
@@ -376,6 +390,11 @@ func (r Record) Reflect() reflect.Value {
 			ID:       binary.BigEndian.Uint16(r.Value[0:2]),
 			Untagged: decodePortBitmask(r.Value[2 : 2+portGroups]),
 			Tagged:   decodePortBitmask(r.Value[2+portGroups:]),
+		})
+	case []PVID:
+		return reflect.ValueOf(PVID{
+			ID:   r.Value[0],
+			PVID: binary.BigEndian.Uint16(r.Value[1:3]),
 		})
 	default:
 		// TODO: Parse CableTestResult.
