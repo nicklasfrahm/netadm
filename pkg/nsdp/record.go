@@ -136,6 +136,68 @@ func (p QoSPriority) String() string {
 	}
 }
 
+// BandwidthLimit describes a bandwidth limit.
+type BandwidthLimit uint8
+
+const (
+	// BandwidthLimitNone does not apply any bandwidth limits.
+	BandwidthLimitNone BandwidthLimit = iota
+	// BandwidthLimit512Kbps limits the bandwidth to 512Kbps.
+	BandwidthLimit512Kbps
+	// BandwidthLimit1Mbps limits the bandwidth to 1Mbps.
+	BandwidthLimit1Mbps
+	// BandwidthLimit2Mbps limits the bandwidth to 2Mbps.
+	BandwidthLimit2Mbps
+	// BandwidthLimit4Mbps limits the bandwidth to 4Mbps.
+	BandwidthLimit4Mbps
+	// BandwidthLimit8Mbps limits the bandwidth to 8Mbps.
+	BandwidthLimit8Mbps
+	// BandwidthLimit16Mbps limits the bandwidth to 16Mbps.
+	BandwidthLimit16Mbps
+	// BandwidthLimit32Mbps limits the bandwidth to 32Mbps.
+	BandwidthLimit32Mbps
+	// BandwidthLimit64Mbps limits the bandwidth to 64Mbps.
+	BandwidthLimit64Mbps
+	// BandwidthLimit128Mbps limits the bandwidth to 128Mbps.
+	BandwidthLimit128Mbps
+	// BandwidthLimit256Mbps limits the bandwidth to 256Mbps.
+	BandwidthLimit256Mbps
+	// BandwidthLimit512Mbps limits the bandwidth to 512Mbps.
+	BandwidthLimit512Mbps
+)
+
+// String returns the string representation of a bandwidth limit.
+func (b BandwidthLimit) String() string {
+	switch b {
+	case BandwidthLimitNone:
+		return "None"
+	case BandwidthLimit512Kbps:
+		return "512Kbps"
+	case BandwidthLimit1Mbps:
+		return "1Mbps"
+	case BandwidthLimit2Mbps:
+		return "2Mbps"
+	case BandwidthLimit4Mbps:
+		return "4Mbps"
+	case BandwidthLimit8Mbps:
+		return "8Mbps"
+	case BandwidthLimit16Mbps:
+		return "16Mbps"
+	case BandwidthLimit32Mbps:
+		return "32Mbps"
+	case BandwidthLimit64Mbps:
+		return "64Mbps"
+	case BandwidthLimit128Mbps:
+		return "128Mbps"
+	case BandwidthLimit256Mbps:
+		return "256Mbps"
+	case BandwidthLimit512Mbps:
+		return "512Mbps"
+	default:
+		return "Unknown"
+	}
+}
+
 // PortSpeed describes the speed of a port.
 type PortSpeed struct {
 	ID    uint8
@@ -220,6 +282,17 @@ func (q QoSPolicy) String() string {
 	return fmt.Sprintf("%d:%s", q.ID, q.Priority.String())
 }
 
+// BandwidthPolicy describes the bandwidth limit of a port.
+type BandwidthPolicy struct {
+	ID    uint8
+	Limit BandwidthLimit
+}
+
+// String returns the string representation of a bandwidth policy.
+func (b BandwidthPolicy) String() string {
+	return fmt.Sprintf("%d:%s", b.ID, b.Limit.String())
+}
+
 // CableTestResult contains the results of a cable test.
 type CableTestResult []uint8
 
@@ -290,8 +363,12 @@ var (
 	RecordPVIDs = NewRecordType(0x3000, "PVIDs", []PVID{{1, 2}, {2, 2}, {3, 1}, {4, 1}, {5, 1}, {6, 1}, {7, 1}, {8, 1}}).SetSlice(true)
 	// RecordQoSEngine contains the QoS engine.
 	RecordQoSEngine = NewRecordType(0x3400, "QoSEngine", QoSDSCP)
-	// RecordQoSPolicy contains the QoS policy of a port.
-	RecordQoSPolicy = NewRecordType(0x3800, "QoSPolicies", []QoSPolicy{{1, QoSPriorityNormal}, {2, QoSPriorityHigh}}).SetSlice(true)
+	// RecordQoSPolicies contains the QoS policy of a port.
+	RecordQoSPolicies = NewRecordType(0x3800, "QoSPolicies", []QoSPolicy{{1, QoSPriorityNormal}, {2, QoSPriorityHigh}}).SetSlice(true)
+	// RecordBandwidthLimitsIn contains the inbound bandwidth limit of a port.
+	RecordBandwidthLimitsIn = NewRecordType(0x4C00, "BandwidthLimitsIn", []BandwidthPolicy{{1, BandwidthLimit256Mbps}, {2, BandwidthLimitNone}}).SetSlice(true)
+	// RecordBandwidthLimitsOut contains the inbound bandwidth limit of a port.
+	RecordBandwidthLimitsOut = NewRecordType(0x5000, "BandwidthLimitsOut", []BandwidthPolicy{{1, BandwidthLimit256Mbps}, {2, BandwidthLimitNone}}).SetSlice(true)
 	// RecordPortMirroring contains the mirroring configuration of all ports.
 	RecordPortMirroring = NewRecordType(0x5C00, "PortMirroring", PortMirroring{1, []uint8{2, 3}})
 	// RecordPortCount contains the number of ports on the device.
@@ -329,7 +406,9 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordVLAN802Q.ID:             RecordVLAN802Q,
 	RecordPVIDs.ID:                RecordPVIDs,
 	RecordQoSEngine.ID:            RecordQoSEngine,
-	RecordQoSPolicy.ID:            RecordQoSPolicy,
+	RecordQoSPolicies.ID:          RecordQoSPolicies,
+	RecordBandwidthLimitsIn.ID:    RecordBandwidthLimitsIn,
+	RecordBandwidthLimitsOut.ID:   RecordBandwidthLimitsOut,
 	RecordPortMirroring.ID:        RecordPortMirroring,
 	RecordPortCount.ID:            RecordPortCount,
 	RecordIGMPSnoopingVLAN.ID:     RecordIGMPSnoopingVLAN,
@@ -470,6 +549,12 @@ func (r Record) Reflect() reflect.Value {
 		return reflect.ValueOf(QoSPolicy{
 			ID:       r.Value[0],
 			Priority: QoSPriority(r.Value[1]),
+		})
+	case []BandwidthPolicy:
+		fmt.Println(r.Value)
+		return reflect.ValueOf(BandwidthPolicy{
+			ID:    r.Value[0],
+			Limit: BandwidthLimit(r.Value[4]),
 		})
 	default:
 		// TODO: Parse CableTestResult.

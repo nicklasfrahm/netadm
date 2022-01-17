@@ -25,6 +25,8 @@ type Device struct {
 	PVIDs                []PVID
 	QoSEngine            QoSEngine
 	QoSPolicies          []QoSPolicy
+	BandwidthLimitsIn    []BandwidthPolicy
+	BandwidthLimitsOut   []BandwidthPolicy
 	PortMetrics          []PortMetric
 	PortMirroring        PortMirroring
 	PortCount            uint8
