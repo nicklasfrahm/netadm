@@ -369,6 +369,10 @@ var (
 	RecordBandwidthLimitsIn = NewRecordType(0x4C00, "BandwidthLimitsIn", []BandwidthPolicy{{1, BandwidthLimit256Mbps}, {2, BandwidthLimitNone}}).SetSlice(true)
 	// RecordBandwidthLimitsOut contains the inbound bandwidth limit of a port.
 	RecordBandwidthLimitsOut = NewRecordType(0x5000, "BandwidthLimitsOut", []BandwidthPolicy{{1, BandwidthLimit256Mbps}, {2, BandwidthLimitNone}}).SetSlice(true)
+	// RecordBroadcastFilter defines whether broadcast storm control is enabled.
+	RecordBroadcastFilter = NewRecordType(0x5400, "BroadcastFilter", false)
+	// RecordBroadcastLimits contains the broadcast filter configuration of a port.
+	RecordBroadcastLimits = NewRecordType(0x5800, "BroadcastLimits", []BandwidthPolicy{{1, BandwidthLimit256Mbps}, {2, BandwidthLimitNone}}).SetSlice(true)
 	// RecordPortMirroring contains the mirroring configuration of all ports.
 	RecordPortMirroring = NewRecordType(0x5C00, "PortMirroring", PortMirroring{1, []uint8{2, 3}})
 	// RecordPortCount contains the number of ports on the device.
@@ -409,6 +413,8 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordQoSPolicies.ID:          RecordQoSPolicies,
 	RecordBandwidthLimitsIn.ID:    RecordBandwidthLimitsIn,
 	RecordBandwidthLimitsOut.ID:   RecordBandwidthLimitsOut,
+	RecordBroadcastFilter.ID:      RecordBroadcastFilter,
+	RecordBroadcastLimits.ID:      RecordBroadcastLimits,
 	RecordPortMirroring.ID:        RecordPortMirroring,
 	RecordPortCount.ID:            RecordPortCount,
 	RecordIGMPSnoopingVLAN.ID:     RecordIGMPSnoopingVLAN,
@@ -481,7 +487,7 @@ func (r Record) Reflect() reflect.Value {
 	case uint8:
 		return reflect.ValueOf(uint8(r.Value[0]))
 	case bool:
-		return reflect.ValueOf(bool(r.Value[0] == 1))
+		return reflect.ValueOf(bool(r.Value[0] > 0))
 	case net.HardwareAddr:
 		return reflect.ValueOf(net.HardwareAddr(r.Value))
 	case net.IP:
@@ -551,7 +557,6 @@ func (r Record) Reflect() reflect.Value {
 			Priority: QoSPriority(r.Value[1]),
 		})
 	case []BandwidthPolicy:
-		fmt.Println(r.Value)
 		return reflect.ValueOf(BandwidthPolicy{
 			ID:    r.Value[0],
 			Limit: BandwidthLimit(r.Value[4]),

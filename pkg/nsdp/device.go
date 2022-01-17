@@ -6,6 +6,9 @@ import (
 	"reflect"
 )
 
+// TODO: Rework this model structure. It's bad. Properties
+// should be group by port and not by feature.
+
 // Device represents a switch network device.
 type Device struct {
 	Model                string
@@ -27,6 +30,8 @@ type Device struct {
 	QoSPolicies          []QoSPolicy
 	BandwidthLimitsIn    []BandwidthPolicy
 	BandwidthLimitsOut   []BandwidthPolicy
+	BroadcastFilter      bool
+	BroadcastLimits      []BandwidthPolicy
 	PortMetrics          []PortMetric
 	PortMirroring        PortMirroring
 	PortCount            uint8
