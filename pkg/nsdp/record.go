@@ -346,7 +346,7 @@ var (
 	RecordDHCP = NewRecordType(0x000B, "DHCP", false)
 	// RecordFirmware contains the device's firmware version.
 	RecordFirmware = NewRecordType(0x000D, "Firmware", "1.00.10")
-	// PasswordEncryption specifies whether the password is transmitted encrypted or plain-text.
+	// RecordPasswordEncryption specifies whether the password is transmitted encrypted or plain-text.
 	RecordPasswordEncryption = NewRecordType(0x0014, "PasswordEncryption", false)
 	// RecordPortSpeeds contains the link status and the speed of a port.
 	RecordPortSpeeds = NewRecordType(0x0C00, "PortSpeeds", []PortSpeed{{1, LinkSpeed1Gbit}, {2, LinkDown}}).SetSlice(true)
@@ -425,7 +425,7 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordEndOfMessage.ID:         RecordEndOfMessage,
 }
 
-// RecordTypeNames maps the name of a record to a record type.
+// RecordTypeByName maps the name of a record to a record type.
 var RecordTypeByName = indexRecordTypeNames()
 
 // indexRecordTypeNames builds an index of the record names.
