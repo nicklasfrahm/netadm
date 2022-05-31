@@ -1,4 +1,4 @@
-package nsdp
+package netgear
 
 import (
 	"errors"
@@ -16,7 +16,7 @@ func MACMarshalBinary(mac *net.HardwareAddr) [6]uint8 {
 }
 
 // GetInterface fetches the interface based on the provided
-// interface name if it up.
+// interface name if it is up.
 func GetInterface(ifaceName string) (*net.Interface, error) {
 	// Fetch specified interface by name.
 	iface, err := net.InterfaceByName(ifaceName)

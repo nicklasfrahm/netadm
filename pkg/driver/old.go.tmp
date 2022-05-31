@@ -1,16 +1,11 @@
-package nsdp
 
-import (
-	"errors"
-	"net"
-	"reflect"
-)
+// System is the system service.
+type System struct {
+	// Info contains information about the device.
+	Info *Info
 
-// TODO: Rework this model structure. It's bad. Properties
-// should be group by port and not by feature.
+	Driver *Driver
 
-// Device represents a switch network device.
-type Device struct {
 	Model                string
 	Name                 string
 	MAC                  net.HardwareAddr

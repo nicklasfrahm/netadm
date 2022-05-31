@@ -1,4 +1,4 @@
-package nsdp
+package ops
 
 // DeduplicateDevices merges two slices by retaining only all unique items.
 func DeduplicateDevices(existing []Device, current []Device) []Device {

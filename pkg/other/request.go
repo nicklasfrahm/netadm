@@ -1,4 +1,4 @@
-package nsdp
+package netgear
 
 // RequestMessages is a high-level API that sends messages via the
 // low-level Send API and returns the results as a slice of Messages.

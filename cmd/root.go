@@ -7,16 +7,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var driver string
 var interfaceName string
+
 var timeout time.Duration
 var retries uint
 var help bool
 
 var rootCmd = &cobra.Command{
-	Use:   "nsdp",
-	Short: "CLI for the Netgear Switch Discovery Protocol (NSDP)",
-	Long: `A command line interface to manage Netgear Smart Switches
-via the UDP-based Netgear Switch Discovery Protocol (NSDP).
+	Use:   "netadm",
+	Short: "CLI to manage network devices remotely",
+	Long: `A command line interface to manage a variety of different
+network devices remotely via different protocols.
 
 Note:
   To achieve a consistent behavior all operations

@@ -14,7 +14,7 @@ import (
 var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Scan for devices",
-	Long: `Scan for Netgear switches in your local network.
+	Long: `Scan for devices in your local network.
 
 The program will exit with a non-zero exit
 code if the scan does not return anything.
@@ -46,7 +46,7 @@ please increase the timeout and try again.`,
 
 		// Check if any devices were found.
 		if len(devices) == 0 {
-			return errors.New("no switches found")
+			return errors.New("no devices found")
 		}
 
 		// Create table with tabwriter.
@@ -55,6 +55,10 @@ please increase the timeout and try again.`,
 
 		// Print simple list of switches.
 		for _, device := range devices {
+			if device.Name == "" {
+				device.Name = "<unset>"
+			}
+
 			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%v\t%s\n", device.Name, device.Model, device.MAC.String(), device.IP.String(), device.DHCP, device.Firmware)
 		}
 

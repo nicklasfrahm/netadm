@@ -39,7 +39,10 @@ to see a list of available keys.`,
 			} else {
 				selector.SetIP(&ip)
 			}
+		} else {
+			selector.SetMAC(nsdp.SelectorAll.MAC)
 		}
+
 		// Check if all keys are valid.
 		keys := args[1:]
 		for i, key := range keys {
@@ -130,6 +133,7 @@ to see a list of available keys.`,
 
 func init() {
 	getCmd.Flags().StringVarP(&interfaceName, "interface", "i", "", "name of the interface to use")
+	getCmd.Flags().StringVarP(&driver, "driver", "d", "all", "name of the driver to use")
 	getCmd.MarkFlagRequired("interface")
 
 	rootCmd.AddCommand(getCmd)

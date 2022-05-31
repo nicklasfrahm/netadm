@@ -1,8 +1,11 @@
-module github.com/nicklasfrahm/nsdp
+module github.com/nicklasfrahm/netadm
 
 go 1.17
 
-require github.com/spf13/cobra v1.3.0
+require (
+	github.com/nicklasfrahm/nsdp v0.1.0
+	github.com/spf13/cobra v1.3.0
+)
 
 require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
