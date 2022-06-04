@@ -79,6 +79,7 @@ func TestMarshal(t *testing.T) {
 			Length: 0x0002,
 			Value:  []byte{'h', 'i'},
 		},
+		RecordEndOfMessage,
 	}
 
 	// Act.
@@ -86,9 +87,10 @@ func TestMarshal(t *testing.T) {
 
 	// Assert.
 	assert.Nil(err, "should not return an error")
-	assert.Equal(14, len(bytes), "should encode the correct number of bytes")
+	assert.Equal(18, len(bytes), "should encode the correct number of bytes")
 	assert.Equal([]byte{
 		0x00, 0x99, 0x00, 0x04, 't', 'e', 's', 't',
 		0x99, 0x00, 0x00, 0x02, 'h', 'i',
-	}, bytes, "should encode all data without including an end of message record")
+		0xFF, 0xFF, 0x00, 0x00,
+	}, bytes, "should encode all data including the end of message record")
 }

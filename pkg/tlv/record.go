@@ -12,6 +12,16 @@ const (
 	TypeEndOfMessage = 0xFFFF
 )
 
+var (
+	// RecordEndOfMessage is the record that marks
+	// the end of a message.
+	RecordEndOfMessage = Record{
+		Type:   TypeEndOfMessage,
+		Length: 0,
+		Value:  nil,
+	}
+)
+
 // Record is a TLV record.
 type Record struct {
 	Type   uint16
