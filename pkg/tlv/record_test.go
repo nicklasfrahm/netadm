@@ -1,13 +1,12 @@
 package tlv
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUnmarshal(t *testing.T) {
+func TestUnmarshalBinary(t *testing.T) {
 	assert := assert.New(t)
 
 	// Arrange.
@@ -23,7 +22,7 @@ func TestUnmarshal(t *testing.T) {
 	err := records.UnmarshalBinary(data)
 
 	// Assert.
-	assert.Nil(err, "should not return an error")
+	assert.NoError(err, "should not return an error")
 	assert.Equal(2, len(*records), "should stop decoding after end of message record")
 	assert.Equal(RecordList{
 		{
@@ -39,7 +38,7 @@ func TestUnmarshal(t *testing.T) {
 	}, *records, "should decode data and omit end of message record")
 }
 
-func TestUnmarshalInvalidEndOfMessage(t *testing.T) {
+func TestUnmarshalBinaryInvalidEndOfMessage(t *testing.T) {
 	assert := assert.New(t)
 
 	// Arrange.
@@ -53,7 +52,7 @@ func TestUnmarshalInvalidEndOfMessage(t *testing.T) {
 	err := records.UnmarshalBinary(data)
 
 	// Assert.
-	assert.Equal(errors.New("invalid end of message"), err, "should return an error")
+	assert.Equal(ErrInvalidEndOfMessage, err, "should return correct error")
 	assert.Equal(1, len(*records), "should partially decode data")
 	assert.Equal(RecordList{
 		{
@@ -64,7 +63,7 @@ func TestUnmarshalInvalidEndOfMessage(t *testing.T) {
 	}, *records, "should decode data until invalid end of message record")
 }
 
-func TestMarshal(t *testing.T) {
+func TestMarshalBinary(t *testing.T) {
 	assert := assert.New(t)
 
 	// Arrange.
@@ -86,7 +85,7 @@ func TestMarshal(t *testing.T) {
 	bytes, err := records.MarshalBinary()
 
 	// Assert.
-	assert.Nil(err, "should not return an error")
+	assert.NoError(err, "should not return an error")
 	assert.Equal(18, len(bytes), "should encode the correct number of bytes")
 	assert.Equal([]byte{
 		0x00, 0x99, 0x00, 0x04, 't', 'e', 's', 't',

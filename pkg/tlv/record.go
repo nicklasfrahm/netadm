@@ -20,6 +20,9 @@ var (
 		Length: 0,
 		Value:  nil,
 	}
+	// ErrInvalidEndOfMessage is the error that is returned
+	// when the end of message record is invalid.
+	ErrInvalidEndOfMessage = errors.New("invalid end of message")
 )
 
 // Record is a TLV record.
