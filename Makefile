@@ -25,6 +25,9 @@ endif
 	@sudo cp $^ $@
 	@sudo chmod 755 $@
 
+test:
+	@go test -v -cover ./...
+
 .PHONY: install
 install: /usr/local/bin/$(TARGET)
 
