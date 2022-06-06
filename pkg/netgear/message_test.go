@@ -67,3 +67,63 @@ func TestMarshalBinary(t *testing.T) {
 	assert.Equal([]byte{0xFF, 0xFF, 0x00, 0x00}, data[46:50], "should append and encode end of message TLV record")
 	assert.Equal(50, len(data), "should stop encoding after end of message record")
 }
+
+func TestUnmarshalBinary(t *testing.T) {
+	assert := assert.New(t)
+
+	// Arrange.
+	data := []byte{
+		// Version.
+		0x01,
+		// Operation.
+		0x02,
+		// Result.
+		0x00, 0x00,
+		// Reserved.
+		0x00, 0x00, 0x00, 0x00,
+		// Client MAC.
+		0x42, 0x00, 0x42, 0x00, 0x42, 0x00,
+		// Server MAC.
+		0x84, 0x00, 0x84, 0x00, 0x84, 0x00,
+		// Reserved.
+		0x00, 0x00,
+		// Sequence number.
+		0x00, 0x09,
+		// Protocol signature.
+		'N', 'S', 'D', 'P',
+		// Reserved.
+		0x00, 0x00, 0x00, 0x00,
+		// First record.
+		0x00, 0x01, 0x00, 0x04, 't', 'e', 's', 't',
+		// Second record.
+		0x00, 0x02, 0x00, 0x02, 'h', 'i',
+		// End of message record.
+		0xFF, 0xFF, 0x00, 0x00,
+	}
+
+	// Act.
+	msg := NewMessage(OpCode(0))
+	err := msg.UnmarshalBinary(data)
+
+	// Assert.
+	assert.NoError(err, "should not return an error")
+	assert.Equal(uint8(1), msg.Header.Version, "should decode version")
+	assert.Equal(ReadResponse, msg.Header.Operation, "should decode operation")
+	assert.Equal(uint16(0), msg.Header.Result, "should decode result")
+	assert.Equal([6]byte{0x42, 0x00, 0x42, 0x00, 0x42, 0x00}, msg.Header.ClientMAC, "should decode client MAC")
+	assert.Equal([6]byte{0x84, 0x00, 0x84, 0x00, 0x84, 0x00}, msg.Header.ServerMAC, "should decode server MAC")
+	assert.Equal(uint16(9), msg.Header.Sequence, "should decode sequence number")
+	assert.Equal([4]byte{'N', 'S', 'D', 'P'}, msg.Header.Signature, "should decode protocol signature")
+	assert.Equal(tlv.RecordList{
+		{
+			Type:   0x01,
+			Length: 0x04,
+			Value:  []byte{'t', 'e', 's', 't'},
+		},
+		{
+			Type:   0x02,
+			Length: 0x02,
+			Value:  []byte{'h', 'i'},
+		},
+	}, msg.Records, "should decode records")
+}
