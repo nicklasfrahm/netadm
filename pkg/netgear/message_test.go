@@ -22,6 +22,7 @@ func TestNewMessage(t *testing.T) {
 	assert.Equal(opcode, msg.Header.Operation, "should set provided opcode")
 	assert.Equal([6]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, msg.Header.ClientMAC, "should set client MAC")
 	assert.Equal([6]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, msg.Header.ServerMAC, "should set server MAC")
+	assert.Equal(make(tlv.RecordList, 0), msg.Records, "should initialize records")
 }
 
 func TestMarshalBinary(t *testing.T) {
@@ -64,4 +65,5 @@ func TestMarshalBinary(t *testing.T) {
 	assert.Equal([]byte{0x00, 0x01, 0x00, 0x04, 't', 'e', 's', 't'}, data[32:40], "should encode first TLV record")
 	assert.Equal([]byte{0x00, 0x02, 0x00, 0x02, 'h', 'i'}, data[40:46], "should encode second TLV record")
 	assert.Equal([]byte{0xFF, 0xFF, 0x00, 0x00}, data[46:50], "should append and encode end of message TLV record")
+	assert.Equal(50, len(data), "should stop encoding after end of message record")
 }
