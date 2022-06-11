@@ -11,7 +11,7 @@ import (
 // It is recommended to set an explicit destination IP as otherwise the message
 // will be sent to the global broadcast address, which is often filtered out by
 // routers.
-func Send(ctx context.Context, iface *net.Interface, dst *net.IP, request *Message) ([]Message, error) {
+func Send(ctx context.Context, iface *net.Interface, dst *net.IP, payload []byte) ([][]byte, error) {
 	// Check if the provided interface has a valid configuration.
 	ip, err := GetInterfaceIPv4(iface)
 	if err != nil {

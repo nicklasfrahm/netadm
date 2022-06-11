@@ -442,24 +442,6 @@ func indexRecordTypeNames() map[string]*RecordType {
 	return recordNames
 }
 
-// OpCode describes the operation that a message is performing.
-type OpCode uint8
-
-const (
-	// ReadRequest is the OpCode that identifies read
-	// request messages sent by the host client.
-	ReadRequest OpCode = iota + 1
-	// ReadResponse is the OpCode that identifies read
-	// response messages sent by the device server.
-	ReadResponse
-	// WriteRequest is the OpCode that identifies write
-	// request messages sent by the host client.
-	WriteRequest
-	// WriteResponse is the OpCode that identifies write
-	// response messages sent by the device server.
-	WriteResponse
-)
-
 // Record defines the binary encoding of a
 // type-length-value object, which makes it
 // possible to encode variable length values
@@ -603,4 +585,34 @@ func decodePortBitmask(portGroups []uint8) []uint8 {
 // joinInts converts a slice of integers to a string.
 func joinInts(ints []uint8, delimiter string) string {
 	return strings.Trim(strings.ReplaceAll(fmt.Sprint(ints), " ", delimiter), "[]")
+}
+
+// NewDiscoveryMessage creates a new message that can be
+// broadcasted to discover other devices on the network.
+func NewDiscoveryMessage() *Message {
+	// Create discovery message.
+	msg := NewMessage(ReadRequest)
+
+	// The server MAC during discovery should be all-zero
+	// as this will be interpreted as a multicast address
+	// and cause all devices to respond to the message.
+	msg.Header.ServerMAC = MACMarshalBinary(SelectorAll.MAC)
+
+	// Define the information we would like to receive during
+	// discovery. The list of records is limited to the most
+	// common ones and therefore NOT the same as used by the
+	// original tool provided by the manufacturer.
+	scanRecords := []Record{
+		{ID: RecordModel.ID},
+		{ID: RecordName.ID},
+		{ID: RecordMAC.ID},
+		{ID: RecordIP.ID},
+		{ID: RecordNetmask.ID},
+		{ID: RecordGateway.ID},
+		{ID: RecordDHCP.ID},
+		{ID: RecordFirmware.ID},
+	}
+	msg.Records = append(msg.Records, scanRecords...)
+
+	return msg
 }

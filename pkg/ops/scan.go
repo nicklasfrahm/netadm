@@ -28,7 +28,7 @@ func Scan(options ...driver.Option) ([]driver.Device, error) {
 	// TODO: Scan for devices using different drivers.
 
 	for _, driver := range drivers {
-		devs, err := driver.Scan()
+		devs, err := driver.Scan(options...)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "error:", err)
 		}
