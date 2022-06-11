@@ -13,10 +13,10 @@ var retries uint
 var help bool
 
 var rootCmd = &cobra.Command{
-	Use:   "nsdp",
-	Short: "CLI for the Netgear Switch Discovery Protocol (NSDP)",
-	Long: `A command line interface to manage Netgear Smart Switches
-via the UDP-based Netgear Switch Discovery Protocol (NSDP).
+	Use:   "netadm",
+	Short: "CLI to manage network devices",
+	Long: `A command line interface to manage network devices
+via different protocols.
 
 Note:
   To achieve a consistent behavior all operations
