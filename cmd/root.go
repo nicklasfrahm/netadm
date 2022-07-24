@@ -8,6 +8,7 @@ import (
 )
 
 var interfaceName string
+var password string
 var timeout time.Duration
 var retries uint
 var help bool
@@ -45,6 +46,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&help, "help", "h", false, "display help for command")
 	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 100*time.Millisecond, "timeout per attempt")
 	rootCmd.PersistentFlags().UintVarP(&retries, "retries", "r", 1, "number of retries to perform")
+	rootCmd.PersistentFlags().StringVarP(&password, "password", "p", "", "password for authentication")
 }
 
 // Execute starts the invocation of the command line interface.
