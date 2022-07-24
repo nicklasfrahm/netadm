@@ -19,7 +19,7 @@ type Device struct {
 	Gateway              net.IP
 	DHCP                 bool
 	Firmware             string
-	PasswordEncryption   bool
+	EncryptionMode       EncryptionMode
 	PortSpeeds           []PortSpeed
 	CableTestResult      CableTestResult
 	VLANEngine           VLANEngine

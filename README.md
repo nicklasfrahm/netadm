@@ -2,7 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nicklasfrahm/netadm)](https://goreportcard.com/report/github.com/nicklasfrahm/netadm)
 
-A CLI and client library to manage network device written in [Go][website-go].
+A CLI and client library to manage network devices written in [Go][website-go].
 
 ## CLI 🦾
 

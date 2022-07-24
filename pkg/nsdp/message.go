@@ -162,6 +162,7 @@ func NewDiscoveryMessage() *Message {
 		{ID: RecordGateway.ID},
 		{ID: RecordDHCP.ID},
 		{ID: RecordFirmware.ID},
+		{ID: RecordEncryptionMode.ID},
 	}
 	msg.Records = append(msg.Records, scanRecords...)
 

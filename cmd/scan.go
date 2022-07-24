@@ -7,7 +7,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/nicklasfrahm/nsdp/pkg/nsdp"
+	"github.com/nicklasfrahm/netadm/pkg/nsdp"
 	"github.com/spf13/cobra"
 )
 
@@ -51,11 +51,15 @@ please increase the timeout and try again.`,
 
 		// Create table with tabwriter.
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.TabIndent)
-		fmt.Fprintf(w, "Name\tModel\tMAC Address\tIP Address\tDHCP\tFirmware\n")
+		fmt.Fprintf(w, "Name\tModel\tMAC Address\tIP Address\tDHCP\tFirmware\tEncryption\n")
 
 		// Print simple list of switches.
 		for _, device := range devices {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%v\t%s\n", device.Name, device.Model, device.MAC.String(), device.IP.String(), device.DHCP, device.Firmware)
+			if device.Name == "" {
+				device.Name = "<unset>"
+			}
+
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%v\t%s\t%s\n", device.Name, device.Model, device.MAC.String(), device.IP.String(), device.DHCP, device.Firmware, device.EncryptionMode)
 		}
 
 		return w.Flush()

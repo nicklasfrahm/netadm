@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/nicklasfrahm/nsdp/pkg/nsdp"
+	"github.com/nicklasfrahm/netadm/pkg/nsdp"
 	"github.com/spf13/cobra"
 )
 

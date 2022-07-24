@@ -1,4 +1,4 @@
-module github.com/nicklasfrahm/nsdp
+module github.com/nicklasfrahm/netadm
 
 go 1.17
 

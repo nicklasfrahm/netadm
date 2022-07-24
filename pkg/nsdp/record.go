@@ -198,6 +198,36 @@ func (b BandwidthLimit) String() string {
 	}
 }
 
+// EncryptionMode describes which encryption modes the switch supports.
+type EncryptionMode uint8
+
+const (
+	// EncryptionModeNone does not support any encryption.
+	EncryptionModeNone EncryptionMode = 0x00
+	// EncryptionModeSimple supports simple encryption using a hardcoded key.
+	EncryptionModeSimple EncryptionMode = 0x01
+	// EncrytionModeHash32 supports hash-based encryption using a 32-bit nonce.
+	EncryptionModeHash32 EncryptionMode = 0x08
+	// EncryptionModeHash64 supports hash-based encryption using a 64-bit nonce.
+	EncryptionModeHash64 EncryptionMode = 0x10
+)
+
+// String returns the string representation of a bandwidth limit.
+func (b EncryptionMode) String() string {
+	switch b {
+	case EncryptionModeNone:
+		return "None"
+	case EncryptionModeSimple:
+		return "Simple"
+	case EncryptionModeHash32:
+		return "Hash32"
+	case EncryptionModeHash64:
+		return "Hash64"
+	default:
+		return "Unknown"
+	}
+}
+
 // PortSpeed describes the speed of a port.
 type PortSpeed struct {
 	ID    uint8
@@ -342,12 +372,14 @@ var (
 	RecordNetmask = NewRecordType(0x0007, "Netmask", net.IP{255, 255, 255, 0})
 	// RecordGateway contains the device's gateway.
 	RecordGateway = NewRecordType(0x0008, "Gateway", net.IP{192, 168, 0, 254})
+	// RecordPassword contains the device's password and must be specified for write requests.
+	RecordPassword = NewRecordType(0x000A, "Password", "password")
 	// RecordDHCP contains the device's DHCP status.
 	RecordDHCP = NewRecordType(0x000B, "DHCP", false)
 	// RecordFirmware contains the device's firmware version.
 	RecordFirmware = NewRecordType(0x000D, "Firmware", "1.00.10")
-	// RecordPasswordEncryption specifies whether the password is transmitted encrypted or plain-text.
-	RecordPasswordEncryption = NewRecordType(0x0014, "PasswordEncryption", false)
+	// RecordEncryptionMode specifies which encryption methods the switch supports.
+	RecordEncryptionMode = NewRecordType(0x0014, "EncryptionMode", EncryptionModeNone)
 	// RecordPortSpeeds contains the link status and the speed of a port.
 	RecordPortSpeeds = NewRecordType(0x0C00, "PortSpeeds", []PortSpeed{{1, LinkSpeed1Gbit}, {2, LinkDown}}).SetSlice(true)
 	// RecordPortMetrics contains network traffic metrics of a port.
@@ -400,9 +432,10 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordIP.ID:                   RecordIP,
 	RecordNetmask.ID:              RecordNetmask,
 	RecordGateway.ID:              RecordGateway,
+	RecordPassword.ID:             RecordPassword,
 	RecordDHCP.ID:                 RecordDHCP,
 	RecordFirmware.ID:             RecordFirmware,
-	RecordPasswordEncryption.ID:   RecordPasswordEncryption,
+	RecordEncryptionMode.ID:       RecordEncryptionMode,
 	RecordPortSpeeds.ID:           RecordPortSpeeds,
 	RecordPortMetrics.ID:          RecordPortMetrics,
 	RecordCableTestResult.ID:      RecordCableTestResult,
@@ -562,6 +595,19 @@ func (r Record) Reflect() reflect.Value {
 			ID:    r.Value[0],
 			Limit: BandwidthLimit(r.Value[4]),
 		})
+	case EncryptionMode:
+		switch r.Value[r.Len-1] {
+		case 0x00:
+			return reflect.ValueOf(EncryptionModeNone)
+		case 0x01:
+			return reflect.ValueOf(EncryptionModeSimple)
+		case 0x08:
+			return reflect.ValueOf(EncryptionModeHash32)
+		case 0x10:
+			return reflect.ValueOf(EncryptionModeHash64)
+		default:
+			return reflect.ValueOf(EncryptionModeNone)
+		}
 	default:
 		// TODO: Parse CableTestResult.
 		return reflect.ValueOf(r.Value)

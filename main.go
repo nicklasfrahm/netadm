@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/nicklasfrahm/nsdp/cmd"
+	"github.com/nicklasfrahm/netadm/cmd"
 )
 
 func main() {
