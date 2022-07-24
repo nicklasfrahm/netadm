@@ -12,15 +12,9 @@ import (
 // will be sent to the global broadcast address, which is often filtered out by
 // routers.
 func Send(ctx context.Context, iface *net.Interface, dst *net.IP, request *Message) ([]Message, error) {
-	// Check if the provided interface has a valid configuration.
-	ip, err := GetInterfaceIPv4(iface)
-	if err != nil {
-		return nil, err
-	}
-
 	// Create a UDP socket to listen for incoming packets.
 	socketAddr := net.UDPAddr{
-		IP:   *ip,
+		IP:   net.IPv4(0, 0, 0, 0),
 		Port: ClientPort,
 	}
 	socket, err := net.ListenUDP("udp", &socketAddr)
