@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"time"
 )
 
 const (
@@ -50,8 +51,11 @@ func (s *Selector) SetIP(ip *net.IP) *Selector {
 
 // Options defines the configuration of an operation of this library.
 type Options struct {
-	Context  context.Context
-	Selector *Selector
+	Context       context.Context
+	Selector      *Selector
+	InterfaceName string
+	Timeout       time.Duration
+	Retries       uint
 }
 
 // Apply applies the option functions to the current set of options.
@@ -96,6 +100,31 @@ func WithSelector(selector *Selector) Option {
 			return errors.New("no selector provided")
 		}
 		o.Selector = selector
+		return nil
+	}
+}
+
+// WithTimeout supplies a custom timeout for the operation.
+func WithTimeout(timeout time.Duration) Option {
+	return func(o *Options) error {
+		o.Timeout = timeout
+		return nil
+	}
+}
+
+// WithRetries supplies the number of retries for the operation.
+func WithRetries(retries uint) Option {
+	return func(o *Options) error {
+		o.Retries = retries
+		return nil
+	}
+}
+
+// WithInterfaceName supplies the name of the network interface
+// to use for the operation.
+func WithInterfaceName(name string) Option {
+	return func(o *Options) error {
+		o.InterfaceName = name
 		return nil
 	}
 }

@@ -44,7 +44,7 @@ command line flag.`,
 
 		// Create table with tabwriter.
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.TabIndent)
-		fmt.Fprintf(w, "INTERFACE\tMAC ADDRESS\tIP ADDRESS\n")
+		fmt.Fprintf(w, "INTERFACE\tMAC\tIP\n")
 
 		// Print all interfaces.
 		for _, iface := range interfaces {

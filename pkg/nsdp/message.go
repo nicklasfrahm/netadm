@@ -137,34 +137,3 @@ func (m *Message) MarshalBinary() ([]byte, error) {
 
 	return w.Bytes(), nil
 }
-
-// NewDiscoveryMessage creates a new message that can be
-// broadcasted to discover other devices on the network.
-func NewDiscoveryMessage() *Message {
-	// Create discovery message.
-	msg := NewMessage(ReadRequest)
-
-	// The server MAC during discovery should be all-zero
-	// as this will be interpreted as a multicast address
-	// and cause all devices to respond to the message.
-	msg.Header.ServerMAC = MACMarshalBinary(SelectorAll.MAC)
-
-	// Define the information we would like to receive during
-	// discovery. The list of records is limited to the most
-	// common ones and therefore NOT the same as used by the
-	// original tool provided by the manufacturer.
-	scanRecords := []Record{
-		{ID: RecordModel.ID},
-		{ID: RecordName.ID},
-		{ID: RecordMAC.ID},
-		{ID: RecordIP.ID},
-		{ID: RecordNetmask.ID},
-		{ID: RecordGateway.ID},
-		{ID: RecordDHCP.ID},
-		{ID: RecordFirmware.ID},
-		{ID: RecordEncryptionMode.ID},
-	}
-	msg.Records = append(msg.Records, scanRecords...)
-
-	return msg
-}
