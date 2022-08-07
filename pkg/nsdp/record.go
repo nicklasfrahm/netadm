@@ -380,6 +380,8 @@ var (
 	RecordFirmware = NewRecordType(0x000D, "Firmware", "1.00.10")
 	// RecordEncryptionMode specifies which encryption methods the switch supports.
 	RecordEncryptionMode = NewRecordType(0x0014, "EncryptionMode", EncryptionModeNone)
+	// RecordEncryptionNonce contains the device's encryption nonce.
+	RecordEncryptionNonce = NewRecordType(0x0017, "EncryptionNonce", []byte{0x01, 0x02, 0x03, 0x04})
 	// RecordPortSpeeds contains the link status and the speed of a port.
 	RecordPortSpeeds = NewRecordType(0x0C00, "PortSpeeds", []PortSpeed{{1, LinkSpeed1Gbit}, {2, LinkDown}}).SetSlice(true)
 	// RecordPortMetrics contains network traffic metrics of a port.
@@ -436,6 +438,7 @@ var RecordTypeByID = map[RecordTypeID]*RecordType{
 	RecordDHCP.ID:                 RecordDHCP,
 	RecordFirmware.ID:             RecordFirmware,
 	RecordEncryptionMode.ID:       RecordEncryptionMode,
+	RecordEncryptionNonce.ID:      RecordEncryptionNonce,
 	RecordPortSpeeds.ID:           RecordPortSpeeds,
 	RecordPortMetrics.ID:          RecordPortMetrics,
 	RecordCableTestResult.ID:      RecordCableTestResult,

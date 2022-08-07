@@ -20,6 +20,7 @@ type Device struct {
 	DHCP                 bool
 	Firmware             string
 	EncryptionMode       EncryptionMode
+	EncryptionNonce      []byte
 	PortSpeeds           []PortSpeed
 	CableTestResult      CableTestResult
 	VLANEngine           VLANEngine

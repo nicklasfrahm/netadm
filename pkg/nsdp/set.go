@@ -8,8 +8,9 @@ import (
 	"strings"
 )
 
-// Get provides a simplified way to fetch configuration keys from devices.
-func Get(id string, keys []string, options ...Option) ([]Device, error) {
+// Set provides a simplified way to set configuration keys on devices.
+// TOOD: Implement this!
+func Set(id string, keys []string, options ...Option) ([]Device, error) {
 	// Get operation options.
 	opts, err := GetDefaultOptions().Apply(options...)
 	if err != nil {
