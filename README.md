@@ -1,6 +1,8 @@
 # netadm 🔍
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/nicklasfrahm/netadm)](https://goreportcard.com/report/github.com/nicklasfrahm/netadm)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nicklasfrahm/netadm?style=flat-square)](https://goreportcard.com/report/github.com/nicklasfrahm/netadm)
+[![Release](https://img.shields.io/github/release/nicklasfrahm/netadm.svg?style=flat-square)](https://github.com/nicklasfrahm/netadm/releases/latest)
+[![Go Reference](https://img.shields.io/badge/Go-reference-informational.svg?style=flat-square)](https://pkg.go.dev/github.com/nicklasfrahm/netadm)
 
 A CLI and client library to manage network devices written in [Go][website-go].
 
