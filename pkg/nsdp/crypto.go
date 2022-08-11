@@ -8,7 +8,7 @@ import (
 // FixedLengthXOR creates a fixed-length XOR encryption of the given data.
 // The length of the hash will be the minimum length of the data and the key.
 func FixedLengthXOR(data []byte, key []byte) []byte {
-	// Suprisingly, Golang does not have a built-in `min` function for integers,
+	// Surprisingly, Golang does not have a built-in `min` function for integers,
 	// so we have to resort to this ugliness.
 	length := int(math.Min(float64(len(data)), float64(len(key))))
 	hash := make([]byte, length)
