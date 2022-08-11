@@ -1,7 +1,6 @@
 package nsdp
 
 import (
-	"errors"
 	"math"
 	"net"
 )
@@ -81,5 +80,5 @@ func EncryptPassword(encryptionMode EncryptionMode, macAddr net.HardwareAddr, no
 		return hash, nil
 	}
 
-	return nil, errors.New("unsupported encryption mode")
+	return nil, ErrInvalidEncryptionMode
 }

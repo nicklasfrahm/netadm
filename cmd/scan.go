@@ -21,7 +21,7 @@ despite them being present on your network
 please increase the timeout and try again.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		id := "all"
-		keys := []string{"name", "model", "mac", "ip", "dhcp", "firmware", "encryptionmode"}
+		keys := []string{"name", "model", "mac", "ip", "dhcp", "firmware", "passwordencryption"}
 
 		devices, err := nsdp.Get(id, keys,
 			nsdp.WithInterfaceName(interfaceName),

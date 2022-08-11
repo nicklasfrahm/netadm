@@ -2,7 +2,6 @@ package nsdp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -25,7 +24,7 @@ func Get(id string, keys []string, options ...Option) ([]Device, error) {
 			// Fall back to MAC address device identification.
 			mac, err := net.ParseMAC(id)
 			if err != nil {
-				return nil, errors.New("device identifier must be a MAC address or an IP address")
+				return nil, ErrInvalidDeviceIdentifier
 			}
 			selector.SetMAC(&mac)
 		} else {
@@ -78,7 +77,7 @@ func Get(id string, keys []string, options ...Option) ([]Device, error) {
 
 	// Check if any devices were found.
 	if len(devices) == 0 {
-		return nil, errors.New("no switches found")
+		return nil, ErrNoDevicesFound
 	}
 
 	return devices, nil

@@ -1,7 +1,6 @@
 package nsdp
 
 import (
-	"errors"
 	"fmt"
 	"net"
 )
@@ -26,7 +25,7 @@ func GetInterface(ifaceName string) (*net.Interface, error) {
 
 	// Check if interface is up.
 	if iface.Flags&net.FlagUp == 0 {
-		return nil, errors.New("interface is down")
+		return nil, ErrInterfaceDown
 	}
 
 	return iface, nil
@@ -40,7 +39,7 @@ func GetInterfaceIPv4(iface *net.Interface) (*net.IP, error) {
 		return nil, err
 	}
 	if len(addresses) == 0 {
-		return nil, errors.New("interface has no address")
+		return nil, ErrInvalidInterfaceAddress
 	}
 
 	// Select IPv4 interface address.
@@ -58,7 +57,7 @@ func GetInterfaceIPv4(iface *net.Interface) (*net.IP, error) {
 
 	// Check if interface has a valid IPv4 address.
 	if address == nil {
-		return nil, errors.New("interface has no valid IPv4 address")
+		return nil, ErrInvalidInterfaceAddress
 	}
 
 	return ip, nil

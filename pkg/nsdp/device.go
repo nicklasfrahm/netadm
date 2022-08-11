@@ -1,7 +1,6 @@
 package nsdp
 
 import (
-	"errors"
 	"net"
 	"reflect"
 )
@@ -19,8 +18,8 @@ type Device struct {
 	Gateway              net.IP
 	DHCP                 bool
 	Firmware             string
-	EncryptionMode       EncryptionMode
-	EncryptionNonce      []byte
+	PasswordEncryption   EncryptionMode
+	PasswordNonce        []byte
 	PortSpeeds           []PortSpeed
 	CableTestResult      CableTestResult
 	VLANEngine           VLANEngine
@@ -48,7 +47,7 @@ func (d *Device) UnmarshalMessage(msg *Message) error {
 		// Fetch record type, because it tells us which field to map it to.
 		rt := record.Type()
 		if rt == nil {
-			return errors.New("record type unknown")
+			return ErrRecordTypeUnknown
 		}
 
 		// Dynamically decode the record type.

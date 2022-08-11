@@ -3,7 +3,6 @@ package nsdp
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"time"
 )
 
@@ -85,7 +84,7 @@ func (m *Message) UnmarshalBinary(data []byte) error {
 		if record.ID == RecordEndOfMessage.ID {
 			// Check if the message is valid.
 			if record.Len != 0 {
-				return errors.New("invalid end of message")
+				return ErrInvalidEndOfMessage
 			}
 			return nil
 		}

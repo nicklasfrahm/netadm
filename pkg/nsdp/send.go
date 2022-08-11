@@ -2,7 +2,6 @@ package nsdp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 )
@@ -43,14 +42,25 @@ func Send(ctx context.Context, iface *net.Interface, dst *net.IP, request *Messa
 
 				response := new(Message)
 				if err := response.UnmarshalBinary(buf[:n]); err != nil {
-					errs <- errors.New("malformed response message")
-					return
+					if response.Header.Result == 0 {
+						errs <- ErrInvalidResponse
+						return
+					}
 				}
 
 				// Check operation result status code.
 				// I assume all non-zero values are bad.
 				if response.Header.Result != 0 {
-					errs <- fmt.Errorf("operation failed with status code 0x%04X", response.Header.Result)
+					switch response.Header.Result {
+					case uint16(ResponseCodeInvalidRecordLength):
+						errs <- ErrInvalidRecordLength
+					case uint16(ResponseCodeInvalidPassword):
+						errs <- ErrInvalidPassword
+					case uint16(ResponseCodeInvalidPasswordLockdown):
+						errs <- ErrInvalidPasswordLockdown
+					default:
+						errs <- fmt.Errorf("operation failed with status code 0x%04X", response.Header.Result)
+					}
 					return
 				}
 

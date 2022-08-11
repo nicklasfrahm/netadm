@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
+	"strings"
 
 	"github.com/nicklasfrahm/netadm/pkg/nsdp"
 	"github.com/spf13/cobra"
@@ -24,6 +24,7 @@ to see a list of available keys.`,
 			nsdp.WithInterfaceName(interfaceName),
 			nsdp.WithRetries(retries),
 			nsdp.WithTimeout(timeout),
+			nsdp.WithPassword(password),
 		}
 
 		id := args[0]
@@ -31,37 +32,19 @@ to see a list of available keys.`,
 			return errors.New("writing to all devices is not supported")
 		}
 
-		_ = args[1:]
+		// Separate the key-value pairs into a map.
+		values := make(map[string]string)
+		for _, arg := range args[1:] {
+			parts := strings.SplitN(arg, "=", 2)
+			if len(parts) == 2 {
+				values[strings.ToLower(parts[0])] = parts[1]
+			}
+		}
 
-		devices, err := nsdp.Get(id, []string{"mac", "encryptionmode"}, opts...)
+		_, err := nsdp.Set(id, values, opts...)
 		if err != nil {
 			return err
 		}
-		encryptionMode := devices[0].EncryptionMode
-
-		nonce := make([]byte, 4)
-		if encryptionMode == nsdp.EncryptionModeHash32 || encryptionMode == nsdp.EncryptionModeHash64 {
-			devs, err := nsdp.Get(id, []string{"mac", "encryptionnonce"}, opts...)
-			if err != nil {
-				return err
-			}
-
-			if len(nonce) == 0 {
-				return errors.New("failed to fetch encryption nonce")
-			}
-
-			copy(nonce, devs[0].EncryptionNonce)
-		}
-
-		encryptedPassword, err := nsdp.EncryptPassword(encryptionMode, devices[0].MAC, nonce, []byte(password))
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(encryptedPassword)
-
-		// Print results.
-		// fmt.Table(os.Stdout, devices, []string{"mac", "encryptionmode"})
 
 		return nil
 	},

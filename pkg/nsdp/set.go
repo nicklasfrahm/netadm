@@ -2,15 +2,12 @@ package nsdp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
-	"strings"
 )
 
 // Set provides a simplified way to set configuration keys on devices.
-// TOOD: Implement this!
-func Set(id string, keys []string, options ...Option) ([]Device, error) {
+func Set(id string, values map[string]string, options ...Option) ([]Device, error) {
 	// Get operation options.
 	opts, err := GetDefaultOptions().Apply(options...)
 	if err != nil {
@@ -26,7 +23,7 @@ func Set(id string, keys []string, options ...Option) ([]Device, error) {
 			// Fall back to MAC address device identification.
 			mac, err := net.ParseMAC(id)
 			if err != nil {
-				return nil, errors.New("device identifier must be a MAC address or an IP address")
+				return nil, ErrInvalidDeviceIdentifier
 			}
 			selector.SetMAC(&mac)
 		} else {
@@ -35,51 +32,91 @@ func Set(id string, keys []string, options ...Option) ([]Device, error) {
 	}
 
 	// Check if all keys are valid.
-	for i, key := range keys {
-		// Normalize key name.
-		keys[i] = strings.ToLower(key)
-
+	for key := range values {
 		// Check if key is valid.
 		if RecordTypeByName[key] == nil {
 			return nil, fmt.Errorf(`unknown configuration key "%s"`, key)
 		}
 	}
 
-	// Create slice to hold results.
-	devices := make([]Device, 0)
+	// Prepare password for authentication.
+	devices, err := Get(id, []string{"mac", "ip", "passwordencryption"}, options...)
+	if err != nil {
+		return nil, err
+	}
+	encryptionMode := devices[0].PasswordEncryption
+	id = devices[0].IP.String()
 
-	// Retry operation if retries is greater than 0.
-	for i := uint(0); i <= opts.Retries; i++ {
-		// Create new message.
-		request := NewMessage(ReadRequest)
-
-		// Add request records.
-		for _, key := range keys {
-			request.Records = append(request.Records, Record{
-				ID: RecordTypeByName[key].ID,
-			})
-		}
-
-		// Create context to handle timeout.
-		ctx, cancel := context.WithTimeout(context.Background(), opts.Timeout)
-		defer cancel()
-
-		// Run scan for devices.
-		devs, err := RequestDevices(opts.InterfaceName, request,
-			WithContext(ctx),
-			WithSelector(selector),
-		)
+	nonce := make([]byte, 4)
+	if encryptionMode == EncryptionModeHash32 || encryptionMode == EncryptionModeHash64 {
+		devs, err := Get(id, []string{"mac", "passwordnonce"}, options...)
 		if err != nil {
 			return nil, err
 		}
 
-		// Deduplicate results from all attempts.
-		devices = DeduplicateDevices(devices, devs)
+		if len(nonce) == 0 {
+			return nil, ErrFailedNonceRetrieval
+		}
+
+		copy(nonce, devs[0].PasswordNonce)
 	}
+
+	encryptedPassword, err := EncryptPassword(encryptionMode, devices[0].MAC, nonce, []byte(opts.Password))
+	if err != nil {
+		return nil, err
+	}
+
+	// Create new message.
+	request := NewMessage(WriteRequest)
+
+	if encryptionMode == EncryptionModeNone || encryptionMode == EncryptionModeSimple {
+		request.Records = append(request.Records, Record{
+			ID:    RecordPassword.ID,
+			Value: encryptedPassword,
+			Len:   uint16(len(encryptedPassword)),
+		})
+	}
+
+	if encryptionMode == EncryptionModeHash32 || encryptionMode == EncryptionModeHash64 {
+		request.Records = append(request.Records,
+			Record{
+				ID:    RecordPasswordHash.ID,
+				Value: encryptedPassword,
+				Len:   uint16(len(encryptedPassword)),
+			},
+		)
+	}
+
+	// Add request records.
+	for key, value := range values {
+		encodedValue := []byte(value)
+
+		request.Records = append(request.Records, Record{
+			ID:    RecordTypeByName[key].ID,
+			Value: encodedValue,
+			Len:   uint16(len(encodedValue)),
+		})
+	}
+
+	// Create context to handle timeout.
+	ctx, cancel := context.WithTimeout(context.Background(), opts.Timeout)
+	defer cancel()
+
+	// Run scan for devices.
+	devs, err := RequestDevices(opts.InterfaceName, request,
+		WithContext(ctx),
+		WithSelector(selector),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Deduplicate results from all attempts.
+	devices = DeduplicateDevices(devices, devs)
 
 	// Check if any devices were found.
 	if len(devices) == 0 {
-		return nil, errors.New("no switches found")
+		return nil, ErrNoDevicesFound
 	}
 
 	return devices, nil

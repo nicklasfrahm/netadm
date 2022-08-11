@@ -2,7 +2,6 @@ package nsdp
 
 import (
 	"context"
-	"errors"
 	"net"
 	"time"
 )
@@ -56,6 +55,7 @@ type Options struct {
 	InterfaceName string
 	Timeout       time.Duration
 	Retries       uint
+	Password      string
 }
 
 // Apply applies the option functions to the current set of options.
@@ -97,7 +97,7 @@ func WithContext(ctx context.Context) Option {
 func WithSelector(selector *Selector) Option {
 	return func(o *Options) error {
 		if selector == nil {
-			return errors.New("no selector provided")
+			return ErrInvalidSelector
 		}
 		o.Selector = selector
 		return nil
@@ -125,6 +125,14 @@ func WithRetries(retries uint) Option {
 func WithInterfaceName(name string) Option {
 	return func(o *Options) error {
 		o.InterfaceName = name
+		return nil
+	}
+}
+
+// WithPassword supplies the password for the operation.
+func WithPassword(password string) Option {
+	return func(o *Options) error {
+		o.Password = password
 		return nil
 	}
 }
