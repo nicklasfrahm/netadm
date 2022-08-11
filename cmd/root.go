@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var version = "dev"
 var interfaceName string
 var timeout time.Duration
 var retries uint
@@ -38,6 +39,7 @@ Note:
 		cmd.Help()
 		os.Exit(0)
 	},
+	Version:      version,
 	SilenceUsage: true,
 }
 
