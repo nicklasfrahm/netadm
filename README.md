@@ -60,7 +60,7 @@ Use "netadm [command] --help" for more information about a command.
 
 ## Configuration Items 🔧
 
-| ID     | Name                 | Example                           |
+| ID     | NAME                 | EXAMPLE                           |
 | ------ | -------------------- | --------------------------------- |
 | 0x0001 | model                | GS308E                            |
 | 0x0003 | name                 | switch-0                          |
@@ -68,9 +68,12 @@ Use "netadm [command] --help" for more information about a command.
 | 0x0006 | ip                   | 192.168.0.253                     |
 | 0x0007 | netmask              | 255.255.255.0                     |
 | 0x0008 | gateway              | 192.168.0.254                     |
+| 0x000A | password             | password                          |
 | 0x000B | dhcp                 | false                             |
 | 0x000D | firmware             | 1.00.10                           |
-| 0x0014 | passwordencryption   | false                             |
+| 0x0014 | passwordencryption   | Hash64                            |
+| 0x0017 | passwordnonce        | [1 2 3 4]                         |
+| 0x001A | passwordhash         | [1 2 3 4]                         |
 | 0x0C00 | portspeeds           | [1:1G 2:Down]                     |
 | 0x1000 | portmetrics          | [1:64/32/0]                       |
 | 0x1C00 | cabletestresult      | [0 0 0 0 0 119 30 183 118]        |

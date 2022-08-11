@@ -379,7 +379,7 @@ var (
 	// RecordFirmware contains the device's firmware version.
 	RecordFirmware = NewRecordType(0x000D, "Firmware", "1.00.10")
 	// RecordPasswordEncryption specifies which encryption methods the switch supports.
-	RecordPasswordEncryption = NewRecordType(0x0014, "PasswordEncryption", EncryptionModeNone)
+	RecordPasswordEncryption = NewRecordType(0x0014, "PasswordEncryption", EncryptionModeHash64)
 	// RecordPasswordNonce contains the device's encryption nonce.
 	RecordPasswordNonce = NewRecordType(0x0017, "PasswordNonce", []byte{0x01, 0x02, 0x03, 0x04})
 	// RecordPasswordHash specifies a hashed password for authentication.
