@@ -100,6 +100,8 @@ Below, you may find a list of useful references that were used for this implemen
 
 - [Netgear Switch Discovery Protocol on Wikipedia][wikipedia-ndsp]
 - [`nmedb/nsdpy` on Github][github-nsdpy]
+- [`tabacha/ProSafeLinux` on Github][github-tabacha-prosafe]
+- [`rhulme/ProSafeLinux` on Github][github-rhulme-prosafe]
 
 ## License 📄
 
@@ -107,4 +109,6 @@ This project is licensed under the terms of the [MIT license](./LICENSE.md).
 
 [wikipedia-ndsp]: https://en.wikipedia.org/wiki/Netgear_Switch_Discovery_Protocol
 [github-nsdpy]: https://github.com/nmedb/nsdpy
+[github-tabacha-prosafe]: https://github.com/tabacha/ProSafeLinux
+[github-rhulme-prosafe]: https://github.com/rhulme/ProSafeLinux
 [website-go]: https://go.dev
